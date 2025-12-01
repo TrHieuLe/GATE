@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bản Đồ Trạm - Smart Gate IoT</title>
+
+<link href="https://cdn.jsdelivr.net/npm/@coreui/coreui@5.0.2/dist/css/coreui.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/@coreui/icons@3.0.1/css/all.min.css" rel="stylesheet">
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+<style>
+  body { background-color: #f3f4f7; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+  
+  /* --- LAYOUT FIX (Đồng bộ với index.html) --- */
+  .wrapper { width: 100%; height: 100vh; display: flex; flex-direction: column; transition: padding-left 0.3s ease; }
+  @media (min-width: 768px) {
+      .wrapper { padding-left: 256px; }
+      .sidebar.hide ~ .wrapper { padding-left: 0; }
+  }
+  
+  /* Map Container full height */
+  .body-map { flex-grow: 1; position: relative; z-index: 1; }
+  #map { width: 100%; height: 100%; z-index: 1; }
+
+  /* Floating Panel (Form thêm cống) */
+  .floating-panel {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 280px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    padding: 15px;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    z-index: 999; /* Nổi trên map */
+    transition: all 0.3s ease;
+  }
+  
+  .floating-panel.collapsed {
+    width: 50px;
+    height: 50px;
+    padding: 0;
+    overflow: hidden;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #321fdb;
+  }
+
+  .floating-panel.collapsed form, 
+  .floating-panel.collapsed h6 { display: none; }
+  .floating-panel.collapsed::after {
+    content: '+';
+    color: white;
+    font-size: 30px;
+    font-weight: bold;
+  }
+
+  .panel-toggle {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    cursor: pointer;
+    color: #999;
+  }
+  
+  /* Header Custom */
+  .header { background: #212529 !important; border-bottom: none; }
+</style>
+</head>
+<body>
+
+  <div class="sidebar sidebar-dark sidebar-fixed" id="sidebar">
+    <div class="sidebar-brand d-none d-md-flex">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-info">
+        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+      </svg>
+      <span class="sidebar-brand-full fw-bold ms-2 text-uppercase">Smart Gate</span>
+    </div>
+    <ul class="sidebar-nav" data-coreui="navigation" data-simplebar>
+      <li class="nav-title">Trang chủ</li>
+      <li class="nav-item"><a class="nav-link" href="index.html"><i class="nav-icon cil-speedometer"></i> Dashboard</a></li>
+      <li class="nav-title">Chức năng</li>
+      <li class="nav-item"><a class="nav-link" href="camera.html"><i class="nav-icon cil-camera"></i> Giám sát Camera</a></li>
+      <li class="nav-item"><a class="nav-link" href="history.html"><i class="nav-icon cil-history"></i> Lịch sử hoạt động</a></li>
+      <li class="nav-item"><a class="nav-link" href="setting.html"><i class="nav-icon cil-settings"></i> Cài đặt</a></li>
+      <li class="nav-item"><a class="nav-link" href="map.html"><i class="nav-icon cil-map"></i> Bản đồ trạm</a></li>
+      <li class="nav-title">Nhóm Nghiên Cứu</li>
+      <li class="nav-item"><a class="nav-link" href="people.html"><i class="nav-icon cil-people"></i> Nhóm nghiên cứu</a></li>
+    </ul>
+    <button class="sidebar-toggler" type="button" onclick="coreui.Sidebar.getInstance(document.querySelector('#sidebar')).toggle()"></button>
+  </div>
+
+  <div class="wrapper">
+    <header class="header header-sticky p-2">
+      <div class="container-fluid">
+        <button class="btn btn-outline-light d-md-none me-3" type="button" onclick="coreui.Sidebar.getInstance(document.querySelector('#sidebar')).toggle()">
+            <i class="cil-menu"></i>
+        </button>
+        <span class="text-white fw-bold fs-5">BẢN ĐỒ CÁC TRẠM CỐNG</span>
+        <div class="ms-auto text-white-50 small d-none d-sm-block">
+             Khu vực: <span class="text-info fw-bold">Hà Nội</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="body-map">
+        <div id="map"></div>
+
+        <div class="floating-panel" id="addGatePanel">
+          <i class="cil-minus panel-toggle" onclick="togglePanel()" title="Thu nhỏ"></i>
+          <h6 class="fw-bold text-primary mb-3"><i class="cil-location-pin"></i> Thêm Trạm Mới</h6>
+          <form id="addForm">
+              <div class="mb-2">
+                  <input type="text" id="gateName" placeholder="Tên trạm (VD: Cống A1)" class="form-control form-control-sm">
+              </div>
+              <div class="mb-2">
+                  <small class="text-muted" style="font-size:0.7rem">*Click lên bản đồ để lấy tọa độ</small>
+                  <div class="input-group input-group-sm">
+                      <input type="number" id="gateLat" placeholder="Vĩ độ (Lat)" class="form-control" readonly>
+                      <input type="number" id="gateLng" placeholder="Kinh độ (Lng)" class="form-control" readonly>
+                  </div>
+              </div>
+              <div class="mb-3">
+                  <label class="form-label small fw-bold">Mực nước ban đầu (%):</label>
+                  <input type="range" id="gateLevel" class="form-range" min="0" max="100" value="50" oninput="document.getElementById('lvlVal').innerText = this.value + '%'">
+                  <div class="text-end small fw-bold text-primary" id="lvlVal">50%</div>
+              </div>
+              <button type="button" class="btn btn-primary w-100 btn-sm" id="btnAddGate">Lưu Trạm</button>
+              <button type="button" class="btn btn-outline-danger w-100 btn-sm mt-2" onclick="clearAllGates()">Xóa Hết</button>
+          </form>
+        </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@coreui/coreui@5.0.2/dist/js/coreui.bundle.min.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <script>
+    const MAP_STORAGE_KEY = 'smartGateLocations';
+
+    // 1. Khởi tạo map (Tập trung vào Hà Nội)
+    const map = L.map('map').setView([21.0285, 105.8542], 13); 
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '© OpenStreetMap'
+    }).addTo(map);
+
+    // Tạo icon tùy chỉnh
+    const greenIcon = new L.Icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+        iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+    });
+
+    const redIcon = new L.Icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+        iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+    });
+
+    let gates = [];
+    let markersLayer = L.layerGroup().addTo(map);
+
+    // 2. Load dữ liệu từ LocalStorage
+    function loadGates() {
+        const data = localStorage.getItem(MAP_STORAGE_KEY);
+        if (data) {
+            gates = JSON.parse(data);
+            renderMarkers();
+        }
+    }
+
+    function saveGates() {
+        localStorage.setItem(MAP_STORAGE_KEY, JSON.stringify(gates));
+    }
+
+    // 3. Vẽ Marker lên bản đồ
+    function renderMarkers() {
+        markersLayer.clearLayers(); // Xóa marker cũ để vẽ lại
+        gates.forEach(g => {
+            const icon = g.level >= 80 ? redIcon : greenIcon;
+            const marker = L.marker([g.lat, g.lng], { icon: icon }).addTo(markersLayer);
+            
+            marker.bindPopup(`
+                <div class="text-center">
+                    <strong>${g.name}</strong><br>
+                    <span class="badge ${g.level >= 80 ? 'bg-danger' : 'bg-success'}">Nước: ${g.level}%</span><br>
+                    <small class="text-muted">${g.lat.toFixed(4)}, ${g.lng.toFixed(4)}</small>
+                    <hr class="my-1">
+                    <button class="btn btn-xs btn-outline-danger" onclick="removeGate(${g.id})">Xóa</button>
+                </div>
+            `);
+        });
+    }
+
+    // 4. Sự kiện Click bản đồ -> Điền tọa độ vào form
+    map.on('click', (e) => {
+        const { lat, lng } = e.latlng;
+        document.getElementById('gateLat').value = lat.toFixed(5);
+        document.getElementById('gateLng').value = lng.toFixed(5);
+        
+        // Mở panel nếu đang đóng để người dùng nhập tên
+        const panel = document.getElementById('addGatePanel');
+        if(panel.classList.contains('collapsed')) togglePanel();
+        
+        // Hiệu ứng popup tạm
+        L.popup()
+            .setLatLng(e.latlng)
+            .setContent('<small>Đã chọn tọa độ này!</small>')
+            .openOn(map);
+    });
+
+    // 5. Thêm cống mới
+    document.getElementById('btnAddGate').addEventListener('click', () => {
+        const name = document.getElementById('gateName').value;
+        const lat = parseFloat(document.getElementById('gateLat').value);
+        const lng = parseFloat(document.getElementById('gateLng').value);
+        const level = parseInt(document.getElementById('gateLevel').value);
+
+        if (!name || isNaN(lat) || isNaN(lng)) {
+            alert('Vui lòng nhập tên và click chọn vị trí trên bản đồ!');
+            return;
+        }
+
+        const newGate = { id: Date.now(), name, lat, lng, level };
+        gates.push(newGate);
+        saveGates();
+        renderMarkers();
+
+        // Reset form
+        document.getElementById('gateName').value = '';
+        document.getElementById('gateLat').value = '';
+        document.getElementById('gateLng').value = '';
+        alert('Đã thêm trạm thành công!');
+    });
+
+    // Xóa 1 cống (Hàm global để popup gọi được)
+    window.removeGate = function(id) {
+        if(confirm("Xóa trạm này?")) {
+            gates = gates.filter(g => g.id !== id);
+            saveGates();
+            renderMarkers();
+        }
+    };
+
+    // Xóa hết
+    window.clearAllGates = function() {
+        if(confirm("Xóa toàn bộ danh sách trạm?")) {
+            gates = [];
+            saveGates();
+            renderMarkers();
+        }
+    }
+
+    // Toggle Panel
+    window.togglePanel = function() {
+        const panel = document.getElementById('addGatePanel');
+        panel.classList.toggle('collapsed');
+    }
+    // Nếu click vào panel khi đang collapsed -> mở ra
+    document.getElementById('addGatePanel').addEventListener('click', function(e) {
+        if(this.classList.contains('collapsed')) {
+            this.classList.remove('collapsed');
+        }
+    });
+    // Chặn click lan truyền khi click vào form bên trong
+    document.getElementById('addForm').addEventListener('click', (e) => e.stopPropagation());
+
+
+    // 6. Giả lập cập nhật mực nước realtime
+    setInterval(() => {
+        if(gates.length === 0) return;
+        // Cập nhật ngẫu nhiên mực nước cho 1 trạm bất kỳ để tạo hiệu ứng động
+        const randIndex = Math.floor(Math.random() * gates.length);
+        gates[randIndex].level = Math.floor(Math.random() * 100);
+        renderMarkers(); // Vẽ lại để cập nhật màu Marker
+    }, 3000);
+
+    // Init
+    loadGates();
+
+  </script>
+</body>
+</html>

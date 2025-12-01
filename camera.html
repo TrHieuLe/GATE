@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Giám sát Camera - Hệ thống Cổng IoT</title>
+
+<!-- CoreUI CSS -->
+<link href="https://cdn.jsdelivr.net/npm/@coreui/coreui@5.0.2/dist/css/coreui.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/@coreui/icons@3.0.1/css/all.min.css" rel="stylesheet">
+<link rel="stylesheet" href="css/camera.css">
+</head>
+<body class="c-app">
+
+  <!-- Sidebar -->
+  <div class="sidebar sidebar-dark sidebar-fixed sidebar-unfoldable" id="sidebar">
+    <div class="sidebar-brand d-none d-md-flex">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="color:white">
+        <path d="M12 2.7l5.66 5.66a8 8 0 1 1-11.31 0z"></path>
+      </svg>
+      <span style="font-size:1.05rem;margin-left:0.5rem">SMART - GATE</span>
+    </div>
+    <ul class="sidebar-nav" data-coreui="navigation" data-simplebar="">
+      <li class="nav-title">Trang chủ</li>
+      <li class="nav-item"><a class="nav-link" href="index.html"><i class="nav-icon cil-speedometer"></i> Dashboard</a></li>
+      <li class="nav-title">Chức năng</li>
+      <li class="nav-item"><a class="nav-link" href="camera.html"><i class="nav-icon cil-camera"></i> Giám sát Camera</a></li>
+      <li class="nav-item"><a class="nav-link" href="history.html"><i class="nav-icon cil-history"></i> Lịch sử hoạt động</a></li>
+      <li class="nav-item"><a class="nav-link" href="setting.html"><i class="nav-icon cil-settings"></i> Cài đặt</a></li>
+      <li class="nav-item"><a class="nav-link" href="map.html"><i class="nav-icon cil-map"></i> Bản đồ trạm</a></li>
+      <li class="nav-title">Nhóm Nghiên Cứu</li>
+      <li class="nav-item"><a class="nav-link" href="people.html"><i class="nav-icon cil-people"></i> Nhóm nghiên cứu</a></li>
+    </ul>
+    <button class="sidebar-toggler" type="button" data-coreui-toggle="unfoldable"></button>
+  </div>
+
+  <!-- Wrapper -->
+  <div class="wrapper d-flex flex-column min-vh-100">
+    <!-- Header -->
+    <header class="header header-sticky p-0 mb-3 header-dark" style="height:var(--cui-header-height)">
+      <div class="container-fluid d-flex justify-content-between align-items-center" style="height:100%">
+        <button class="header-toggler d-lg-none me-2" type="button" data-coreui-toggle="sidebar" data-coreui-target="#sidebar"><i class="cil-menu"></i></button>
+        <span class="text-white fw-bold">Hệ thống Giám sát Camera</span>
+        <div class="d-flex gap-2">
+          <button class="btn btn-outline-light btn-sm" id="btnAddCamera">
+            <i class="cil-plus"></i> Thêm camera
+          </button>
+          <button class="btn btn-outline-light btn-sm" id="btnRefreshAll">
+            <i class="cil-reload"></i> Làm mới
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main -->
+    <main class="body flex-grow-1">
+      <div class="container-fluid">
+
+        <!-- Control Panel -->
+        <div class="control-panel">
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div class="control-group">
+              <label>Chế độ xem:</label>
+              <button class="btn btn-dark btn-sm" onclick="changeView('single')"><i class="cil-fullscreen"></i> Đơn</button>
+              <button class="btn btn-dark btn-sm" onclick="changeView('dual')"><i class="cil-columns"></i> Đôi</button>
+              <button class="btn btn-dark btn-sm" onclick="changeView('quad')"><i class="cil-grid"></i> 4 ô</button>
+              <button class="btn btn-dark btn-sm" onclick="changeView('grid')"><i class="cil-apps"></i> Lưới</button>
+            </div>
+            
+            <div class="control-group">
+              <button class="btn btn-success btn-sm" onclick="startAllRecording()">
+                <i class="cil-video"></i> Ghi tất cả
+              </button>
+              <button class="btn btn-danger btn-sm" onclick="stopAllRecording()">
+                <i class="cil-media-stop"></i> Dừng ghi
+              </button>
+              <button class="btn btn-info btn-sm" onclick="captureAllSnapshots()">
+                <i class="cil-camera"></i> Chụp tất cả
+              </button>
+              <button class="btn btn-warning btn-sm" onclick="toggleMotionDetection()">
+                <i class="cil-bell"></i> <span id="motionText">Bật phát hiện</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Camera Grid -->
+        <div class="camera-grid view-quad" id="cameraGrid">
+          <!-- Cameras will be dynamically added here -->
+        </div>
+
+        <!-- Bottom Section: Snapshots & Alerts -->
+        <div class="row g-3 mt-3">
+          <div class="col-md-8">
+            <div class="snapshots-section">
+              <div class="d-flex justify-content-between align-items-center">
+                <h5><i class="cil-image"></i> Ảnh chụp gần đây</h5>
+                <button class="btn btn-sm btn-danger" onclick="clearAllSnapshots()">
+                  <i class="cil-trash"></i> Xóa tất cả
+                </button>
+              </div>
+              <div class="snapshots-grid" id="snapshotsGrid">
+                <!-- Snapshots will be added here -->
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-4">
+            <div class="alert-panel">
+              <h5><i class="cil-bell"></i> Cảnh báo</h5>
+              <div id="alertsList">
+                <!-- Alerts will be added here -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <footer class="footer px-4" style="background:#1a1a1a; border-top:1px solid #2c3e50">
+      <div>© 2025 • Hệ thống Quản lý Cổng IoT</div>
+      <div class="ms-auto">Phát triển trên <a href="https://coreui.io/" style="color:#3498db">CoreUI</a></div>
+    </footer>
+  </div>
+
+  <!-- Add Camera Modal -->
+  <div class="modal fade" id="addCameraModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content bg-dark text-white">
+        <div class="modal-header">
+          <h5 class="modal-title">Thêm camera mới</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Tên camera</label>
+            <input type="text" class="form-control" id="newCameraName" placeholder="VD: Camera Cổng A1">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Vị trí</label>
+            <input type="text" class="form-control" id="newCameraLocation" placeholder="VD: Cổng chính">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">URL Stream</label>
+            <input type="text" class="form-control" id="newCameraUrl" placeholder="rtsp://... hoặc http://...">
+            <small class="form-text text-muted">Hỗ trợ RTSP, HTTP stream hoặc để trống để dùng demo</small>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Loại camera</label>
+            <select class="form-select" id="newCameraType">
+              <option value="entrance">Lối vào</option>
+              <option value="gate">Cổng chính</option>
+              <option value="water">Giám sát nước</option>
+              <option value="general">Tổng quan</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+          <button type="button" class="btn btn-primary" onclick="saveNewCamera()">Lưu</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- CoreUI JS -->
+  <script src="https://cdn.jsdelivr.net/npm/@coreui/coreui@5.0.2/dist/js/coreui.bundle.min.js"></script>
+
+  <script src="js/camera.js"></script>
+</body>
+</html>

@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CoreUI Dashboard - Quản lý Cống IoT</title>
+  
+  <link href="https://cdn.jsdelivr.net/npm/@coreui/coreui@5.0.2/dist/css/coreui.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/@coreui/icons@3.0.1/css/all.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    /* Tùy chỉnh nhỏ */
+    .c-sidebar-nav-link.active {
+      font-weight: 600;
+    }
+    /* weather */
+    .weather-icon { width:48px; height:48px; margin-right: 0.75rem; }
+    .card-weather .card-body { display:flex; align-items:center; gap:0.75rem; }
+  </style>
+</head>
+<body>
+
+  <div class="sidebar sidebar-dark sidebar-fixed sidebar-unfoldable" id="sidebar">
+    <div class="sidebar-brand d-none d-md-flex">
+      <svg class="sidebar-brand-full" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="color:white">
+        <path d="M12 2.7l5.66 5.66a8 8 0 1 1-11.31 0z"></path>
+      </svg>
+      <span style="font-size: 1.1rem; margin-left: 0.5rem;">Cống IoT</span>
+    </div>
+
+    <ul class="sidebar-nav" data-coreui="navigation" data-simplebar="">
+      <li class="nav-item">
+        <a class="nav-link active" href="#">
+          <i class="nav-icon cil-speedometer"></i> Dashboard
+        </a>
+      </li>
+      <li class="nav-title">Chức năng</li>
+      <li class="nav-item">
+        <a class="nav-link" href="#">
+          <i class="nav-icon cil-camera"></i> Giám sát
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="#">
+          <i class="nav-icon cil-history"></i> Lịch sử
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="#">
+          <i class="nav-icon cil-settings"></i> Cài đặt
+        </a>
+      </li>
+    </ul>
+    <button class="sidebar-toggler" type="button" data-coreui-toggle="unfoldable"></button>
+  </div>
+
+  <div class="wrapper d-flex flex-column min-vh-100">
+    
+    <header class="header header-sticky p-0 mb-4 header-dark bg-primary">
+      <div class="container-fluid d-flex align-items-center justify-content-between">
+        
+        <!-- button mobile toggle -->
+        <button class="header-toggler d-lg-none me-2" type="button" data-coreui-toggle="sidebar" data-coreui-target="#sidebar" style="margin-inline-start: -14px;">
+          <i class="icon icon-lg cil-menu"></i>
+        </button>
+
+        <div class="d-flex align-items-center">
+          <ul class="header-nav d-none d-lg-flex me-3">
+            <li class="nav-item"><span class="nav-link">Dashboard Quản lý Cống</span></li>
+          </ul>
+
+          <!-- nút thu gọn đặt trên navbar (desktop) -->
+          <button class="btn btn-light d-none d-lg-inline-flex me-3" type="button" data-coreui-toggle="unfoldable" data-coreui-target="#sidebar">
+            <i class="cil-menu"></i> Thu gọn
+          </button>
+        </div>
+
+        <div class="d-flex align-items-center">
+          <span class="nav-link small text-white me-3">Cập nhật: <strong id="lastUpdate">--:--:--</strong></span>
+
+          <div class="dropdown">
+            <a class="nav-link py-0" data-coreui-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+              <div class="avatar avatar-md">
+                <img class="avatar-img" src="https://via.placeholder.com/40" alt="Admin">
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="body flex-grow-1">
+      <div class="container-lg px-4">
+        
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-4 mb-4">
+          
+          <div class="col">
+            <div class="card h-100">
+              <div class="card-body">
+                <div class="text-medium-emphasis text-nowrap">Mực nước hiện tại</div>
+                <div class="fs-4 fw-semibold" id="waterValue">-- %</div>
+                <small class="text-medium-emphasis" id="avg10">TB (10): --%</small>
+              </div>
+              <div class="card-footer px-3 py-2">
+                <canvas id="miniChart" height="70"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <div class="col">
+            <div class="card text-white bg-primary h-100">
+              <div class="card-body">
+                <div class="text-nowrap">Trạng thái cống</div>
+                <div class="fs-4 fw-semibold" id="gateStatus">ĐÓNG</div>
+                <small>Chế độ: <strong id="autoModeText">AUTO</strong></small>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col">
+            <div class="card h-100">
+              <div class="card-body">
+                <div class="text-medium-emphasis text-nowrap">Lần thao tác / Ngày</div>
+                <div class="fs-4 fw-semibold" id="cycles">0</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col">
+             <div class="card h-100">
+              <div class="card-body">
+                <div class="text-medium-emphasis text-nowrap">Cảnh báo hôm nay</div>
+                <div class="fs-4 fw-semibold" id="alerts">0</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Thêm card Thời tiết (giữ cùng row, sẽ wrap nếu cần) -->
+          <div class="col">
+            <div class="card h-100 card-weather">
+              <div class="card-body">
+                <img id="weatherIcon" src="" alt="icon" class="weather-icon">
+                <div>
+                  <div id="weatherTemp" class="fs-4 fw-semibold">--°C</div>
+                  <div id="weatherDesc" class="text-medium-emphasis">--</div>
+                </div>
+              </div>
+              <div class="card-footer d-flex justify-content-between align-items-center">
+                <small id="weatherLocation" class="text-medium-emphasis">--</small>
+                <div class="d-flex align-items-center">
+                  <input id="weatherCity" class="form-control form-control-sm me-2" style="width:120px" placeholder="Hanoi">
+                  <button id="btnRefreshWeather" class="btn btn-sm btn-outline-secondary">Cập nhật</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+        <div id="weather5d" class="d-flex gap-3"></div> 
+
+
+        <div class="row g-4 mb-4">
+          <div class="col-md-8">
+            <div class="card h-100">
+              <div class="card-header">Biểu đồ mực nước (60 cập nhật gần nhất)</div>
+              <div class="card-body">
+                <canvas id="bigChart" style="height:250px;"></canvas>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-4">
+            <div class="card mb-4">
+              <div class="card-header">Bảng điều khiển</div>
+              <div class="card-body">
+                <label for="btnAuto" class="form-label">Chế độ</label>
+                <div class="d-grid gap-2">
+                  <button class="btn btn-secondary" id="btnAuto">Chế độ: AUTO</button>
+                </div>
+                
+                <hr>
+                <label class="form-label">Điều khiển thủ công</label>
+                <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+                  <button class="btn btn-success" id="btnOpen">MỞ CỐNG</button>
+                  <button class="btn btn-danger" id="btnClose">ĐÓNG CỐNG</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">Kết nối</div>
+              <div class="card-body">
+                 <div class="input-group">
+                   <input class="form-control" id="wsUrl" value="ws://localhost:8080" placeholder="ws://server:port">
+                   <button class="btn btn-primary" id="btnWsConnect" type="button">Kết nối</button>
+                 </div>
+                 <div class="form-text mt-2">Trạng thái: <strong id="wsState">Ngắt</strong></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row g-4 mb-4">
+          <div class="col-md-4">
+            <div class="card mb-4">
+              <div class="card-header">Cài đặt Ngưỡng</div>
+              <div class="card-body">
+                <label for="openThresh" class="form-label">Ngưỡng mở: <span class="fw-semibold" id="openVal">80%</span></label>
+                <input type="range" class="form-range" id="openThresh" min="0" max="100" value="80" oninput="document.getElementById('openVal').textContent=this.value+'%'">
+
+                <label for="closeThresh" class="form-label mt-2">Ngưỡng đóng: <span class="fw-semibold" id="closeVal">40%</span></label>
+                <input type="range" class="form-range" id="closeThresh" min="0" max="100" value="40" oninput="document.getElementById('closeVal').textContent=this.value+'%'">
+              </div>
+            </div>
+            
+            <div class="card">
+              <div class="card-header">Giám sát Camera</div>
+              <div class="card-body">
+                 <div class="alert alert-secondary text-center" role="alert">
+                   Camera 1 <small>(Không có kết nối)</small>
+                 </div>
+                 <div class="alert alert-secondary text-center" role="alert">
+                   Camera 2 <small>(Không có kết nối)</small>
+                 </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-8">
+            <div class="card h-100">
+              <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Lịch sử hoạt động</span>
+                <button class="btn btn-outline-secondary btn-sm" id="btnDownloadCsv">
+                  <i class="cil-cloud-download"></i> Tải CSV
+                </button>
+              </div>
+              <div class="card-body" style="max-height: 450px; overflow-y: auto;">
+                <div class="list-group" id="historyList">
+                  </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    
+    <footer class="footer px-4">
+      <div>© 2025 • Hệ thống Quản lý Cống IoT</div>
+      <div class="ms-auto">Phát triển trên <a href="https://coreui.io/">CoreUI</a></div>
+    </footer>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@coreui/coreui@5.0.2/dist/js/coreui.bundle.min.js"></script>
+
+  <script>
+document.addEventListener('DOMContentLoaded', () => {
+
+  // --------------------------
+  // STATE
+  // --------------------------
+  const state = { water:45, gate:'closed', cycles:0, alerts:0, history:[] };
+
+  // --------------------------
+  // UI REFERENCES
+  // --------------------------
+  const waterValueEl = document.getElementById('waterValue');
+  const gateStatusEl = document.getElementById('gateStatus');
+  const cyclesEl = document.getElementById('cycles');
+  const historyList = document.getElementById('historyList');
+  const alertsEl = document.getElementById('alerts');
+  const avg10El = document.getElementById('avg10');
+  const lastUpdateEl = document.getElementById('lastUpdate');
+  const autoModeTextEl = document.getElementById('autoModeText');
+
+  // --------------------------
+  // CHARTS
+  // --------------------------
+  const chartOptions = {
+    plugins: { legend: { display: false } },
+    scales: { 
+      y: { beginAtZero: true, max: 100, ticks: { display: false } },
+      x: { ticks: { display: false } }
+    },
+    elements: { point: { radius: 0 }, line: { tension: 0.3, borderWidth: 2 } },
+    maintainAspectRatio: false
+  };
+
+  const miniChart = new Chart(document.getElementById('miniChart').getContext('2d'), {
+    type:'line',
+    data:{labels:[], datasets:[{label:'Mực nước', data:[], fill:true, backgroundColor:'rgba(25,118,210,0.1)', borderColor:'#1976d2'}]},
+    options: chartOptions
+  });
+
+  const bigChart = new Chart(document.getElementById('bigChart').getContext('2d'), {
+    type:'line',
+    data:{labels:[], datasets:[{label:'Mực', data:[], fill:true, backgroundColor:'rgba(25,118,210,0.1)', borderColor:'#1976d2'}]},
+    options: {
+      ...chartOptions,
+      scales: {
+        y: { beginAtZero:true, max:100, ticks:{ display:true } },
+        x: { ticks:{ display:true, autoSkip:true, maxTicksLimit:10 } }
+      }
+    }
+  });
+
+  function pushPoint(chart, v){
+    const now = new Date();
+    const label = now.getHours()+':'+String(now.getMinutes()).padStart(2,'0')+':'+String(now.getSeconds()).padStart(2,'0');
+    chart.data.labels.push(label);
+    chart.data.datasets[0].data.push(parseFloat(v.toFixed(1)));
+    const limit = chart.canvas.id==='miniChart'?20:60;
+    if(chart.data.labels.length>limit){ chart.data.labels.shift(); chart.data.datasets[0].data.shift(); }
+    chart.update();
+  }
+
+  function pushWater(v){
+    pushPoint(miniChart, v);
+    pushPoint(bigChart, v);
+  }
+
+  // --------------------------
+  // RENDER UI
+  // --------------------------
+  function render(){
+    waterValueEl.textContent = state.water.toFixed(1)+' %';
+    gateStatusEl.textContent = state.gate==='open'?'MỞ':'ĐÓNG';
+    cyclesEl.textContent = state.cycles;
+    alertsEl.textContent = state.alerts;
+    lastUpdateEl.textContent = new Date().toLocaleTimeString('vi-VN');
+
+    // update card color
+    const card = gateStatusEl.closest('.card');
+    if(card){
+      card.classList.replace('bg-primary', state.gate==='open'?'bg-success':'bg-primary');
+      card.classList.replace('bg-success', state.gate==='open'?'bg-success':'bg-primary');
+      card.classList.add('text-white');
+    }
+
+    // avg10
+    const arr = state.history.slice(0,10).map(x=>parseFloat(x.v));
+    avg10El.textContent = arr.length ? `TB (10): ${(arr.reduce((a,b)=>a+b,0)/arr.length).toFixed(1)}%` : 'TB (10): --%';
+  }
+
+  // --------------------------
+  // HISTORY LOG
+  // --------------------------
+  function addHistory(text, v){
+    const now = new Date().toLocaleTimeString('vi-VN');
+    state.history.unshift({t:now, txt:text, v:v});
+    if(state.history.length>200) state.history.pop();
+
+    const item = document.createElement('div');
+    item.className = 'list-group-item list-group-item-action flex-column align-items-start';
+
+    let icon='cil-check-circle', color='text-success';
+    if(text.includes('Mở cống')) { icon='cil-arrow-top'; color='text-info'; }
+    if(text.includes('Đóng cống')) { icon='cil-arrow-bottom'; color='text-warning'; }
+
+    item.innerHTML = `
+      <div class="d-flex w-100 justify-content-between">
+        <h6 class="mb-1 ${color}"><i class="icon ${icon}"></i> ${text}</h6>
+        <small>${now}</small>
+      </div>
+      <small class="text-medium-emphasis">Mực nước: ${v.toFixed(1)}%</small>
+    `;
+
+    historyList.prepend(item);
+    if(historyList.children.length>200) historyList.removeChild(historyList.lastChild);
+  }
+
+  // --------------------------
+  // SIMULATION
+  // --------------------------
+  function simulate(){
+    const change = (Math.random()-0.5)*6;
+    state.water = Math.max(0, Math.min(100, state.water+change));
+
+    const openTh = parseInt(document.getElementById('openThresh').value,10);
+    const closeTh = parseInt(document.getElementById('closeThresh').value,10);
+    const autoBtn = document.getElementById('btnAuto');
+
+    if(autoBtn.classList.contains('active')){
+      if(state.water>openTh && state.gate!=='open'){ state.gate='open'; state.cycles++; state.alerts++; addHistory('Mở cống (auto)', state.water); }
+      if(state.water<closeTh && state.gate!=='closed'){ state.gate='closed'; state.cycles++; addHistory('Đóng cống (auto)', state.water); }
+    }
+
+    render();
+    pushWater(state.water);
+  }
+
+  // init simulation
+  const simInterval = setInterval(simulate, 3000);
+  for(let i=0;i<20;i++){
+    const v = 40 + Math.random()*10;
+    pushPoint(miniChart, v);
+    if(i<60) pushPoint(bigChart, v);
+    state.history.push({t:'--:--:--', txt:'Init', v:v});
+  }
+  render();
+
+  // --------------------------
+  // CONTROLS
+  // --------------------------
+  document.getElementById('btnOpen').addEventListener('click', ()=>{
+    state.gate='open'; state.cycles++; addHistory('Mở cống (manual)', state.water); render();
+  });
+
+  document.getElementById('btnClose').addEventListener('click', ()=>{
+    state.gate='closed'; state.cycles++; addHistory('Đóng cống (manual)', state.water); render();
+  });
+
+  document.getElementById('btnAuto').addEventListener('click', function(){
+    const btn=this;
+    btn.classList.toggle('active');
+    btn.classList.toggle('btn-info');
+    btn.classList.toggle('btn-secondary');
+    const isAuto = btn.classList.contains('active');
+    btn.textContent = `Chế độ: ${isAuto?'AUTO':'MANUAL'}`;
+    autoModeTextEl.textContent = isAuto?'AUTO':'MANUAL';
+    document.getElementById('btnOpen').disabled = isAuto;
+    document.getElementById('btnClose').disabled = isAuto;
+  });
+
+  document.getElementById('btnAuto').click();
+
+  // --------------------------
+  // DOWNLOAD CSV
+  // --------------------------
+  function downloadCSV(){
+    const rows = [['Thời gian','Mô tả','Mực nước (%)'], ...state.history.slice(0,200).map(h=>[h.t,h.txt,h.v.toFixed(1)])];
+    const csv = rows.map(r=>r.map(c=>`"${c.replace(/"/g,'""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+    const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='water_history.csv';
+    document.body.appendChild(a); a.click(); a.remove();
+  }
+  document.getElementById('btnDownloadCsv').addEventListener('click', downloadCSV);
+  window.downloadCSV = downloadCSV;
+
+  // --------------------------
+  // WEBSOCKET
+  // --------------------------
+  let ws=null;
+  function connectWS(){
+    const url=document.getElementById('wsUrl').value;
+    const stateEl=document.getElementById('wsState');
+    if(ws && ws.readyState===WebSocket.OPEN){ ws.close(); ws=null; stateEl.textContent='Ngắt'; return; }
+    try{
+      ws=new WebSocket(url);
+      stateEl.textContent='Đang kết nối...';
+      ws.onopen = ()=>{ stateEl.textContent='Kết nối'; stateEl.style.color='green'; }
+      ws.onmessage = (evt)=>{
+        try{
+          const d = JSON.parse(evt.data);
+          if(typeof d.water==='number'){ state.water=d.water; addHistory('Cập nhật từ WS', state.water); render(); pushWater(state.water); }
+          if(d.event) addHistory(d.event, state.water);
+        }catch(e){ console.warn('WS data parse', e); }
+      }
+      ws.onclose = ()=>{
+        stateEl.textContent='Ngắt'; stateEl.style.color='red';
+        setTimeout(connectWS,5000);
+      }
+      ws.onerror = ()=>{ stateEl.textContent='Lỗi kết nối'; stateEl.style.color='red'; }
+    }catch(e){ alert('Không thể kết nối WS: '+e.message); }
+  }
+  window.connectWS = connectWS;
+  document.getElementById('btnWsConnect').addEventListener('click', connectWS);
+
+  window.sendCommand = (cmd)=>{ console.log('Gửi lệnh:',cmd); }
+
+  // --------------------------
+  // WEATHER (OpenWeatherMap)
+  // --------------------------
+  async function fetchWeather(city){
+    const apiKey = '2dd8c8cdc0dcdd5b571aebf98db5bf52';
+    if(!apiKey){ document.getElementById('weatherTemp').textContent='--°C'; document.getElementById('weatherDesc').textContent='Vui lòng thêm API key'; return; }
+    const q = city || document.getElementById('weatherCity').value || 'Hanoi';
+    const url=`https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(q)}&units=metric&appid=${apiKey}&lang=vi`;
+    try{
+      const res = await fetch(url);
+      if(!res.ok){ document.getElementById('weatherDesc').textContent=`Lỗi: ${res.status}`; document.getElementById('weatherTemp').textContent='--°C'; document.getElementById('weatherIcon').src=''; return; }
+      const data=await res.json();
+      const temp=data.main.temp;
+      const desc=data.weather[0].description;
+      const icon=data.weather[0].icon;
+      const loc = data.name + (data.sys?.country?', '+data.sys.country:'');
+      document.getElementById('weatherTemp').textContent=`${temp.toFixed(1)}°C`;
+      document.getElementById('weatherDesc').textContent=desc.charAt(0).toUpperCase()+desc.slice(1);
+      document.getElementById('weatherLocation').textContent=loc;
+      document.getElementById('weatherIcon').src=`https://openweathermap.org/img/wn/${icon}@2x.png`;
+    }catch(err){
+      console.error('Lỗi fetchWeather:',err);
+      document.getElementById('weatherDesc').textContent='Lỗi kết nối';
+      document.getElementById('weatherTemp').textContent='--°C';
+      document.getElementById('weatherIcon').src='';
+    }
+  }
+
+  document.getElementById('btnRefreshWeather').addEventListener('click', ()=>fetchWeather());
+  fetchWeather();
+  setInterval(fetchWeather, 10*60*1000);
+
+}); // end DOMContentLoaded
+    // --------------------------
+
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+  // --------------------------
+  // STATE
+  // --------------------------
+  const state = { water:45, gate:'closed', cycles:0, alerts:0, history:[] };
+
+  // --------------------------
+  // UI REFERENCES
+  // --------------------------
+  const waterValueEl = document.getElementById('waterValue');
+  const gateStatusEl = document.getElementById('gateStatus');
+  const cyclesEl = document.getElementById('cycles');
+  const historyList = document.getElementById('historyList');
+  const alertsEl = document.getElementById('alerts');
+  const avg10El = document.getElementById('avg10');
+  const lastUpdateEl = document.getElementById('lastUpdate');
+  const autoModeTextEl = document.getElementById('autoModeText');
+  const weather5dEl = document.getElementById('weather5d'); // container for 5-day forecast
+
+  // --------------------------
+  // CHARTS
+  // --------------------------
+  const chartOptions = {
+    plugins: { legend: { display: false } },
+    scales: { 
+      y: { beginAtZero: true, max: 100, ticks: { display: false } },
+      x: { ticks: { display: false } }
+    },
+    elements: { point: { radius: 0 }, line: { tension: 0.3, borderWidth: 2 } },
+    maintainAspectRatio: false
+  };
+
+  const miniChart = new Chart(document.getElementById('miniChart').getContext('2d'), {
+    type:'line',
+    data:{labels:[], datasets:[{label:'Mực nước', data:[], fill:true, backgroundColor:'rgba(25,118,210,0.1)', borderColor:'#1976d2'}]},
+    options: chartOptions
+  });
+
+  const bigChart = new Chart(document.getElementById('bigChart').getContext('2d'), {
+    type:'line',
+    data:{labels:[], datasets:[{label:'Mực', data:[], fill:true, backgroundColor:'rgba(25,118,210,0.1)', borderColor:'#1976d2'}]},
+    options: {
+      ...chartOptions,
+      scales: {
+        y: { beginAtZero:true, max:100, ticks:{ display:true } },
+        x: { ticks:{ display:true, autoSkip:true, maxTicksLimit:10 } }
+      }
+    }
+  });
+
+  function pushPoint(chart, v){
+    const now = new Date();
+    const label = now.getHours()+':'+String(now.getMinutes()).padStart(2,'0')+':'+String(now.getSeconds()).padStart(2,'0');
+    chart.data.labels.push(label);
+    chart.data.datasets[0].data.push(parseFloat(v.toFixed(1)));
+    const limit = chart.canvas.id==='miniChart'?20:60;
+    if(chart.data.labels.length>limit){ chart.data.labels.shift(); chart.data.datasets[0].data.shift(); }
+    chart.update();
+  }
+
+  function pushWater(v){
+    pushPoint(miniChart, v);
+    pushPoint(bigChart, v);
+  }
+
+  // --------------------------
+  // RENDER UI
+  // --------------------------
+  function render(){
+    waterValueEl.textContent = state.water.toFixed(1)+' %';
+    gateStatusEl.textContent = state.gate==='open'?'MỞ':'ĐÓNG';
+    cyclesEl.textContent = state.cycles;
+    alertsEl.textContent = state.alerts;
+    lastUpdateEl.textContent = new Date().toLocaleTimeString('vi-VN');
+
+    // update card color
+    const card = gateStatusEl.closest('.card');
+    if(card){
+      card.classList.replace('bg-primary', state.gate==='open'?'bg-success':'bg-primary');
+      card.classList.replace('bg-success', state.gate==='open'?'bg-success':'bg-primary');
+      card.classList.add('text-white');
+    }
+
+    // avg10
+    const arr = state.history.slice(0,10).map(x=>parseFloat(x.v));
+    avg10El.textContent = arr.length ? `TB (10): ${(arr.reduce((a,b)=>a+b,0)/arr.length).toFixed(1)}%` : 'TB (10): --%';
+  }
+
+  // --------------------------
+  // HISTORY LOG
+  // --------------------------
+  function addHistory(text, v){
+    const now = new Date().toLocaleTimeString('vi-VN');
+    state.history.unshift({t:now, txt:text, v:v});
+    if(state.history.length>200) state.history.pop();
+
+    const item = document.createElement('div');
+    item.className = 'list-group-item list-group-item-action flex-column align-items-start';
+
+    let icon='cil-check-circle', color='text-success';
+    if(text.includes('Mở cống')) { icon='cil-arrow-top'; color='text-info'; }
+    if(text.includes('Đóng cống')) { icon='cil-arrow-bottom'; color='text-warning'; }
+
+    item.innerHTML = `
+      <div class="d-flex w-100 justify-content-between">
+        <h6 class="mb-1 ${color}"><i class="icon ${icon}"></i> ${text}</h6>
+        <small>${now}</small>
+      </div>
+      <small class="text-medium-emphasis">Mực nước: ${v.toFixed(1)}%</small>
+    `;
+
+    historyList.prepend(item);
+    if(historyList.children.length>200) historyList.removeChild(historyList.lastChild);
+  }
+
+  // --------------------------
+  // SIMULATION
+  // --------------------------
+  function simulate(){
+    const change = (Math.random()-0.5)*6;
+    state.water = Math.max(0, Math.min(100, state.water+change));
+
+    const openTh = parseInt(document.getElementById('openThresh').value,10);
+    const closeTh = parseInt(document.getElementById('closeThresh').value,10);
+    const autoBtn = document.getElementById('btnAuto');
+
+    if(autoBtn.classList.contains('active')){
+      if(state.water>openTh && state.gate!=='open'){ state.gate='open'; state.cycles++; state.alerts++; addHistory('Mở cống (auto)', state.water); }
+      if(state.water<closeTh && state.gate!=='closed'){ state.gate='closed'; state.cycles++; addHistory('Đóng cống (auto)', state.water); }
+    }
+
+    render();
+    pushWater(state.water);
+  }
+
+  // init simulation
+  const simInterval = setInterval(simulate, 3000);
+  for(let i=0;i<20;i++){
+    const v = 40 + Math.random()*10;
+    pushPoint(miniChart, v);
+    if(i<60) pushPoint(bigChart, v);
+    state.history.push({t:'--:--:--', txt:'Init', v:v});
+  }
+  render();
+
+  // --------------------------
+  // CONTROLS
+  // --------------------------
+  document.getElementById('btnOpen').addEventListener('click', ()=>{
+    state.gate='open'; state.cycles++; addHistory('Mở cống (manual)', state.water); render();
+  });
+
+  document.getElementById('btnClose').addEventListener('click', ()=>{
+    state.gate='closed'; state.cycles++; addHistory('Đóng cống (manual)', state.water); render();
+  });
+
+  document.getElementById('btnAuto').addEventListener('click', function(){
+    const btn=this;
+    btn.classList.toggle('active');
+    btn.classList.toggle('btn-info');
+    btn.classList.toggle('btn-secondary');
+    const isAuto = btn.classList.contains('active');
+    btn.textContent = `Chế độ: ${isAuto?'AUTO':'MANUAL'}`;
+    autoModeTextEl.textContent = isAuto?'AUTO':'MANUAL';
+    document.getElementById('btnOpen').disabled = isAuto;
+    document.getElementById('btnClose').disabled = isAuto;
+  });
+  document.getElementById('btnAuto').click();
+
+  // --------------------------
+  // DOWNLOAD CSV
+  // --------------------------
+  function downloadCSV(){
+    const rows = [['Thời gian','Mô tả','Mực nước (%)'], ...state.history.slice(0,200).map(h=>[h.t,h.txt,h.v.toFixed(1)])];
+    const csv = rows.map(r=>r.map(c=>`"${c.replace(/"/g,'""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+    const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='water_history.csv';
+    document.body.appendChild(a); a.click(); a.remove();
+  }
+  document.getElementById('btnDownloadCsv').addEventListener('click', downloadCSV);
+  window.downloadCSV = downloadCSV;
+
+  // --------------------------
+  // WEBSOCKET
+  // --------------------------
+  let ws=null;
+  function connectWS(){
+    const url=document.getElementById('wsUrl').value;
+    const stateEl=document.getElementById('wsState');
+    if(ws && ws.readyState===WebSocket.OPEN){ ws.close(); ws=null; stateEl.textContent='Ngắt'; return; }
+    try{
+      ws=new WebSocket(url);
+      stateEl.textContent='Đang kết nối...';
+      ws.onopen = ()=>{ stateEl.textContent='Kết nối'; stateEl.style.color='green'; }
+      ws.onmessage = (evt)=>{
+        try{
+          const d = JSON.parse(evt.data);
+          if(typeof d.water==='number'){ state.water=d.water; addHistory('Cập nhật từ WS', state.water); render(); pushWater(state.water); }
+          if(d.event) addHistory(d.event, state.water);
+        }catch(e){ console.warn('WS data parse', e); }
+      }
+      ws.onclose = ()=>{ stateEl.textContent='Ngắt'; stateEl.style.color='red'; setTimeout(connectWS,5000); }
+      ws.onerror = ()=>{ stateEl.textContent='Lỗi kết nối'; stateEl.style.color='red'; }
+    }catch(e){ alert('Không thể kết nối WS: '+e.message); }
+  }
+  window.connectWS = connectWS;
+  document.getElementById('btnWsConnect').addEventListener('click', connectWS);
+
+  window.sendCommand = (cmd)=>{ console.log('Gửi lệnh:',cmd); }
+
+  // --------------------------
+  // WEATHER 5-DAY (OpenWeatherMap)
+  // --------------------------
+  function getWeatherColor(desc){
+    desc = desc.toLowerCase();
+    if(desc.includes('mưa') && desc.includes('to')) return '#4a90e2';
+    if(desc.includes('mưa')) return '#7ec8ff';
+    if(desc.includes('nắng')) return '#ffeb3b';
+    if(desc.includes('mây')) return '#cfd8dc';
+    return '#e0f7fa';
+  }
+
+  async function fetchWeather5d(city){
+    const apiKey = '2dd8c8cdc0dcdd5b571aebf98db5bf52'; // Thay bằng key thật
+    if(!apiKey) return;
+    const q = city || document.getElementById('weatherCity').value || 'Hanoi';
+    try{
+      const res = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${q}&units=metric&appid=${apiKey}&lang=vi`);
+      const data = await res.json();
+      if(!data.list) return;
+      // clear
+      weather5dEl.innerHTML='';
+      // group theo ngày (5 ngày)
+      const days = {};
+      data.list.forEach(item=>{
+        const date = item.dt_txt.split(' ')[0];
+        if(!days[date]) days[date] = [];
+        days[date].push(item);
+      });
+      let cnt=0;
+      for(const date in days){
+        if(cnt>=5) break;
+        const day = days[date];
+        // lấy min, max, icon phổ biến
+        const temps = day.map(d=>d.main.temp);
+        const min = Math.min(...temps).toFixed(1);
+        const max = Math.max(...temps).toFixed(1);
+        // lấy icon xuất hiện nhiều nhất
+        const icons = day.map(d=>d.weather[0].icon);
+        const icon = icons.sort((a,b)=>icons.filter(v=>v===b).length - icons.filter(v=>v===a).length)[0];
+        const desc = day[0].weather[0].description;
+        const html = `
+          <div class="weather-day card p-2 text-center" style="width:100px; margin:2px; display:inline-block; background:${getWeatherColor(desc)};">
+            <div><strong>${date.split('-').slice(1).join('/')}</strong></div>
+            <img src="https://openweathermap.org/img/wn/${icon}@2x.png" alt="${desc}" title="${desc}">
+            <div>${desc.charAt(0).toUpperCase()+desc.slice(1)}</div>
+            <div>Min: ${min}°C</div>
+            <div>Max: ${max}°C</div>
+          </div>
+        `;
+        weather5dEl.innerHTML += html;
+        cnt++;
+      }
+    }catch(err){
+      console.error(err);
+    }
+  }
+
+  document.getElementById('btnRefreshWeather').addEventListener('click', ()=>fetchWeather5d());
+  fetchWeather5d();
+});
+</script>
+
+
+</body>
+</html>

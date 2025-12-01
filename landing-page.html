@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ thống Quản lý Cống IoT</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            min-height: 100vh;
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, #1976d2 0%, #0d47a1 100%);
+            color: white;
+            padding: 1.5rem 2rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo svg {
+            width: 40px;
+            height: 40px;
+        }
+
+        .logo h1 {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .logo p {
+            font-size: 0.875rem;
+            color: #bbdefb;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .notification-btn {
+            position: relative;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .notification-btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            width: 10px;
+            height: 10px;
+            background: #f44336;
+            border-radius: 50%;
+        }
+
+        /* Navigation */
+        nav {
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            gap: 2rem;
+            padding: 0 2rem;
+        }
+
+        .nav-btn {
+            background: none;
+            border: none;
+            padding: 1rem 0;
+            border-bottom: 4px solid transparent;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-btn:hover {
+            color: #1976d2;
+        }
+
+        .nav-btn.active {
+            color: #1976d2;
+            border-bottom-color: #1976d2;
+        }
+
+        /* Main Content */
+        main {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Cards */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .card-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .card-icon {
+            color: #1976d2;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            border-radius: 25px;
+            color: white;
+            font-weight: bold;
+            font-size: 1.25rem;
+            text-align: center;
+        }
+
+        .status-open {
+            background: #4caf50;
+        }
+
+        .status-closed {
+            background: #f44336;
+        }
+
+        .water-level {
+            text-align: center;
+        }
+
+        .water-level-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #1976d2;
+            margin-bottom: 1rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 1rem;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #42a5f5, #1976d2);
+            transition: width 0.5s;
+            border-radius: 10px;
+        }
+
+        .alert-box {
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 4px solid;
+            margin-bottom: 0.5rem;
+        }
+
+        .alert-danger {
+            background: #ffebee;
+            border-color: #f44336;
+            color: #c62828;
+        }
+
+        .alert-warning {
+            background: #fff3e0;
+            border-color: #ff9800;
+            color: #e65100;
+        }
+
+        .alert-success {
+            background: #e8f5e9;
+            border-color: #4caf50;
+            color: #2e7d32;
+        }
+
+        /* Control Panel */
+        .control-panel {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 1.5rem;
+        }
+
+        .control-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 1rem;
+        }
+
+        .control-group h4 {
+            margin-bottom: 1rem;
+            color: #333;
+        }
+
+        .mode-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #e0e0e0;
+            color: #666;
+        }
+
+        .mode-btn.active {
+            background: #1976d2;
+            color: white;
+            box-shadow: 0 4px 8px rgba(25, 118, 210, 0.3);
+        }
+
+        .gate-control-btn {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+        }
+
+        .gate-control-btn.open {
+            background: #f44336;
+            color: white;
+        }
+
+        .gate-control-btn.open:hover {
+            background: #d32f2f;
+        }
+
+        .gate-control-btn.closed {
+            background: #4caf50;
+            color: white;
+        }
+
+        .gate-control-btn.closed:hover {
+            background: #388e3c;
+        }
+
+        .gate-control-btn:disabled {
+            background: #9e9e9e;
+            cursor: not-allowed;
+        }
+
+        /* Activity Log */
+        .activity-log {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .activity-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: #f5f5f5;
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+            transition: background 0.3s;
+        }
+
+        .activity-item:hover {
+            background: #eeeeee;
+        }
+
+        .activity-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .activity-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .dot-success { background: #4caf50; }
+        .dot-warning { background: #ff9800; }
+        .dot-info { background: #2196f3; }
+
+        /* Camera Grid */
+        .camera-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .camera-feed {
+            background: #263238;
+            border-radius: 12px;
+            aspect-ratio: 16/9;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+
+        .camera-feed svg {
+            width: 60px;
+            height: 60px;
+            opacity: 0.5;
+            margin-bottom: 1rem;
+        }
+
+        /* Settings */
+        .settings-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .settings-group label {
+            display: block;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .settings-group input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: #bbdefb;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .settings-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #1976d2;
+            cursor: pointer;
+        }
+
+        .settings-group input[type="number"] {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #bbdefb;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .settings-group input[type="number"]:focus {
+            outline: none;
+            border-color: #1976d2;
+        }
+
+        .range-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.875rem;
+            color: #666;
+            margin-top: 0.5rem;
+        }
+
+        .range-value {
+            color: #1976d2;
+            font-weight: 600;
+        }
+
+        .save-btn {
+            width: 100%;
+            padding: 1rem;
+            background: #1976d2;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .save-btn:hover {
+            background: #1565c0;
+        }
+
+        /* Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .stat-card {
+            background: #e3f2fd;
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #1976d2;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: #666;
+            margin-bottom: 0.5rem;
+        }
+
+        .chart-placeholder {
+            height: 300px;
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #666;
+            font-size: 1.125rem;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Footer */
+        footer {
+            background: #0d47a1;
+            color: white;
+            text-align: center;
+            padding: 1.5rem;
+            margin-top: 3rem;
+        }
+
+        footer p {
+            font-size: 0.875rem;
+            color: #bbdefb;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .nav-container {
+                overflow-x: auto;
+            }
+
+            .card-grid,
+            .control-grid,
+            .camera-grid,
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="header-content">
+            <div class="logo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+                </svg>
+                <div>
+                    <h1>Hệ thống Quản lý Cống IoT</h1>
+                    <p>Smart Gate Control System</p>
+                </div>
+            </div>
+            <div class="user-info">
+                <button class="notification-btn">
+                    🔔
+                    <span class="notification-badge"></span>
+                </button>
+                <div>
+                    <strong>Admin</strong>
+                    <p style="font-size: 0.75rem; color: #bbdefb;">Đang trực tuyến</p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-container">
+            <button class="nav-btn active" onclick="switchTab('dashboard')">
+                📊 Tổng quan
+            </button>
+            <button class="nav-btn" onclick="switchTab('monitoring')">
+                📹 Giám sát
+            </button>
+            <button class="nav-btn" onclick="switchTab('settings')">
+                ⚙️ Cài đặt
+            </button>
+            <button class="nav-btn" onclick="switchTab('reports')">
+                📈 Báo cáo
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main>
+        <!-- Dashboard Tab -->
+        <div id="dashboard" class="tab-content active">
+            <div class="card-grid">
+                <!-- Gate Status Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Trạng thái cống</h3>
+                        <span class="card-icon">⚡</span>
+                    </div>
+                    <div style="text-align: center;">
+                        <div id="gateStatus" class="status-badge status-closed">ĐÓNG</div>
+                        <p style="color: #666; font-size: 0.875rem; margin-top: 0.5rem;">
+                            Cập nhật: <span id="updateTime"></span>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Water Level Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Mực nước</h3>
+                        <span class="card-icon">💧</span>
+                    </div>
+                    <div class="water-level">
+                        <div id="waterLevelValue" class="water-level-value">45.0%</div>
+                        <div class="progress-bar">
+                            <div id="waterLevelBar" class="progress-fill" style="width: 45%"></div>
+                        </div>
+                        <p id="waterLevelStatus" style="color: #666; font-size: 0.875rem; margin-top: 0.5rem;">
+                            Mức bình thường
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Alert Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Cảnh báo</h3>
+                        <span class="card-icon">⚠️</span>
+                    </div>
+                    <div id="alertContainer"></div>
+                </div>
+            </div>
+
+            <!-- Control Panel -->
+            <div class="control-panel">
+                <h3 style="font-size: 1.25rem; font-weight: bold; color: #333; margin-bottom: 1.5rem;">
+                    ⚙️ Bảng điều khiển
+                </h3>
+                <div class="control-grid">
+                    <div class="control-group">
+                        <h4>Chế độ hoạt động</h4>
+                        <div class="mode-buttons">
+                            <button class="mode-btn active" onclick="setMode('auto')">Tự động</button>
+                            <button class="mode-btn" onclick="setMode('manual')">Thủ công</button>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <h4>Điều khiển cống</h4>
+                        <button id="gateControlBtn" class="gate-control-btn closed" onclick="toggleGate()" disabled>
+                            🔓 MỞ CỐNG
+                        </button>
+                        <p id="modeNote" style="font-size: 0.875rem; color: #666; margin-top: 0.5rem;">
+                            * Tắt chế độ tự động để điều khiển thủ công
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Activity Log -->
+            <div class="activity-log">
+                <h3 style="font-size: 1.25rem; font-weight: bold; color: #333; margin-bottom: 1rem;">
+                    📅 Hoạt động gần đây
+                </h3>
+                <div class="activity-item">
+                    <div class="activity-info">
+                        <span class="activity-dot dot-success"></span>
+                        <div>
+                            <strong>Mở cống tự động</strong>
+                            <p style="font-size: 0.875rem; color: #666;">Mực nước đạt 85%</p>
+                        </div>
+                    </div>
+                    <span style="color: #666; font-size: 0.875rem;">14:30</span>
+                </div>
+                <div class="activity-item">
+                    <div class="activity-info">
+                        <span class="activity-dot dot-success"></span>
+                        <div>
+                            <strong>Đóng cống tự động</strong>
+                            <p style="font-size: 0.875rem; color: #666;">Mực nước giảm xuống 50%</p>
+                        </div>
+                    </div>
+                    <span style="color: #666; font-size: 0.875rem;">12:15</span>
+                </div>
+                <div class="activity-item">
+                    <div class="activity-info">
+                        <span class="activity-dot dot-warning"></span>
+                        <div>
+                            <strong>Cảnh báo mực nước cao</strong>
+                            <p style="font-size: 0.875rem; color: #666;">Mực nước đạt 75%</p>
+                        </div>
+                    </div>
+                    <span style="color: #666; font-size: 0.875rem;">10:45</span>
+                </div>
+                <div class="activity-item">
+                    <div class="activity-info">
+                        <span class="activity-dot dot-info"></span>
+                        <div>
+                            <strong>Kiểm tra hệ thống</strong>
+                            <p style="font-size: 0.875rem; color: #666;">Bảo trì định kỳ</p>
+                        </div>
+                    </div>
+                    <span style="color: #666; font-size: 0.875rem;">09:20</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monitoring Tab -->
+        <div id="monitoring" class="tab-content">
+            <div class="card">
+                <h3 style="font-size: 1.25rem; font-weight: bold; color: #333; margin-bottom: 1.5rem;">
+                    📹 Camera giám sát
+                </h3>
+                <div class="camera-grid">
+                    <div class="camera-feed">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M23 7l-7 5 7 5V7z"/>
+                            <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                        </svg>
+                        <div>
+                            <p style="font-size: 1rem;">Camera 1</p>
+                            <p style="font-size: 0.875rem; color: #999;">Đang kết nối...</p>
+                        </div>
+                    </div>
+                    <div class="camera-feed">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M23 7l-7 5 7 5V7z"/>
+                            <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                        </svg>
+                        <div>
+                            <p style="font-size: 1rem;">Camera 2</p>
+                            <p style="font-size: 0.875rem; color: #999;">Đang kết nối...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Tab -->
+        <div id="settings" class="tab-content">
+            <div class="card">
+                <h3 style="font-size: 1.25rem; font-weight: bold; color: #333; margin-bottom: 1.5rem;">
+                    Cài đặt ngưỡng
+                </h3>
+                <div class="settings-group">
+                    <label>Ngưỡng mở cống (%)</label>
+                    <input type="range" id="openThreshold" min="0" max="100" value="80" oninput="updateRangeValue('openThreshold')">
+                    <div class="range-labels">
+                        <span>0%</span>
+                        <span class="range-value" id="openThresholdValue">80%</span>
+                        <span>100%</span>
+                    </div>
+                </div>
+                <div class="settings-group">
+                    <label>Ngưỡng đóng cống (%)</label>
+                    <input type="range" id="closeThreshold" min="0" max="100" value="40" oninput="updateRangeValue('closeThreshold')">
+                    <div class="range-labels">
+                        <span>0%</span>
+                        <span class="range-value" id="closeThresholdValue">40%</span>
+                        <span>100%</span>
+                    </div>
+                </div>
+                <div class="settings-group">
+                    <label>Thời gian trễ (phút)</label>
+                    <input type="number" value="5" min="1" max="60">
+                </div>
+                <button class="save-btn" onclick="saveSettings()">Lưu cài đặt</button>
+            </div>
+        </div>
+
+        <!-- Reports Tab -->
+        <div id="reports" class="tab-content">
+            <div class="card">
+                <h3 style="font-size: 1.25rem; font-weight: bold; color: #333; margin-bottom: 1.5rem;">
+                    📈 Biểu đồ & Thống kê
+                </h3>
+                <div class="chart-placeholder">
+                    Biểu đồ mực nước theo thời gian
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <p class="stat-label">Lần mở/đóng hôm nay</p>
+                        <p class="stat-value">12</p>
+                    </div>
+                    <div class="stat-card">
+                        <p class="stat-label">Mức trung bình</p>
+                        <p class="stat-value">62%</p>
+                    </div>
+                    <div class="stat-card">
+                        <p class="stat-label">Cảnh báo</p>
+                        <p class="stat-value">3</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <p>© 2025 Hệ thống Quản lý Cống IoT - Phát triển bởi Smart City Solutions</p>
+    </footer>
+
+    <script>
+        // State
+        let state = {
+            gateStatus: 'closed',
+            waterLevel: 45,
+            autoMode: true
+        };
+
+        // Update time
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('updateTime').textContent = now.toLocaleTimeString('vi-VN');
+        }
+
+        // Update water level
+        function updateWaterLevel() {
+            const change = (Math.random() - 0.5) * 5;
+            state.waterLevel = Math.max(0, Math.min(100, state.waterLevel + change));
+            
+            const levelValue = document.getElementById('waterLevelValue');
+            const levelBar = document.getElementById('waterLevelBar');
+            const levelStatus = document.getElementById('waterLevelStatus');
+            const alertContainer = document.getElementById('alertContainer');
+            
+            levelValue.textContent = state.waterLevel.toFixed(1) + '%';
+            levelBar.style.width = state.waterLevel + '%';
+            
+            // Update status and alerts
+            alertContainer.innerHTML = '';
+            if (state.waterLevel > 80) {
+                levelStatus.textContent = 'Nguy cơ ngập cao';
+                alertContainer.innerHTML = '<div class="alert-box alert-danger"><strong>⚠️ Mực nước vượt ngưỡng!</strong></div>';
+            } else if (state.waterLevel > 60) {
+                levelStatus.textContent = 'Mức cao';
+                alertContainer.innerHTML = '<div class="alert-box alert-warning"><strong>⚡ Mực nước cao</strong></div>';
+            } else {
+                levelStatus.textContent = 'Mức bình thường';
+                alertContainer.innerHTML = '<div class="alert-box alert-success"><strong>✓ Hệ thống hoạt động bình thường</strong></div>';
+            }
+        }
+
+        // Switch tab
+        function switchTab(tabName) {
+            // Hide all tabs
+            const tabs = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Remove active from all nav buttons
+            const navBtns = document.querySelectorAll('.nav-btn');
+            navBtns.forEach(btn => btn.classList.remove('active'));
+            
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active to clicked button
+            event.target.classList.add('active');
+        }
+
+        // Set mode
+        function setMode(mode) {
+            state.autoMode = (mode === 'auto');
+            
+            const modeBtns = document.querySelectorAll('.mode-btn');
+            modeBtns.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            const gateBtn = document.getElementById('gateControlBtn');
+            const modeNote = document.getElementById('modeNote');
+            
+            if (state.autoMode) {
+                gateBtn.disabled = true;
+                modeNote.style.display = 'block';
+            } else {
+                gateBtn.disabled = false;
+                modeNote.style.display = 'none';
+            }
+        }
+
+        // Toggle gate
+        function toggleGate() {
+            state.gateStatus = state.gateStatus === 'open' ? 'closed' : 'open';
+            
+            const statusBadge = document.getElementById('gateStatus');
+            const gateBtn = document.getElementById('gateControlBtn');
+            
+            if (state.gateStatus === 'open') {
+                statusBadge.textContent = 'MỞ';
+                statusBadge.className = 'status-badge status-open';
+                gateBtn.textContent = '🔒 ĐÓNG CỐNG';
+                gateBtn.className = 'gate-control-btn open';
+            } else {
+                statusBadge.textContent = 'ĐÓNG';
+                statusBadge.className = 'status-badge status-closed';
+                gateBtn.textContent = '🔓 MỞ CỐNG';
+                gateBtn.className = 'gate-control-btn closed';
+            }
+            updateTime();
+        }
+
+        // Update range value display
+        function updateRangeValue(id) {
+            const slider = document.getElementById(id);
+            const valueDisplay = document.getElementById(id + 'Value');
+            valueDisplay.textContent = slider.value + '%';
+        }
+
+        // Save settings
+        function saveSettings() {
+            const openThreshold = document.getElementById('openThreshold').value;
+            const closeThreshold = document.getElementById('closeThreshold').value;
+            alert(`Đã lưu cài đặt:\n- Ngưỡng mở: ${openThreshold}%\n- Ngưỡng đóng: ${closeThreshold}%`);
+        }
+
+        // Initialize
+        updateTime();
+        updateWaterLevel();
+        
+        // Update water level every 3 seconds
+        setInterval(updateWaterLevel, 3000);
+        
+        // Update time every second
+        setInterval(updateTime, 1000);
+    </script>
+</body>
+</html>

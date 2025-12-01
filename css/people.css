@@ -1,0 +1,94 @@
+/* --- 1. BACKGROUND ĐẸP (ANIMATED GRADIENT) --- */
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        /* Tạo gradient màu chuyển động */
+        background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+        /* Hoặc dùng tông xanh nhẹ nhàng này cho hợp IoT: */
+        background: linear-gradient(-45deg, #e0eafe, #dbeafe, #f3e8ff, #e0e7ff);
+        background-size: 400% 400%;
+        animation: gradientBG 15s ease infinite;
+        min-height: 100vh;
+    }
+
+    @keyframes gradientBG {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    /* --- LAYOUT FIX --- */
+    .wrapper { width: 100%; min-height: 100vh; display: flex; flex-direction: column; transition: padding-left 0.3s ease; }
+    @media (min-width: 768px) {
+        .wrapper { padding-left: 256px; }
+        .sidebar.hide ~ .wrapper { padding-left: 0; }
+    }
+
+    /* --- HEADER & SIDEBAR --- */
+    .header { 
+        /* Glassmorphism cho Header */
+        background: rgba(33, 37, 41, 0.95) !important; 
+        backdrop-filter: blur(5px);
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    /* --- PROFILE CARD (Cải tiến đẹp hơn để nổi trên nền động) --- */
+    .section-title {
+        border-left: 5px solid #321fdb;
+        padding-left: 15px;
+        margin-bottom: 25px;
+        font-weight: 800;
+        color: #2c3e50;
+        font-size: 1.6rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        /* Tạo nền trắng mờ cho chữ dễ đọc */
+        background: rgba(255,255,255,0.6);
+        display: inline-block;
+        padding-right: 15px;
+        border-radius: 0 10px 10px 0;
+    }
+
+    .member-card {
+        background: rgba(255, 255, 255, 0.9); /* Nền trắng mờ */
+        backdrop-filter: blur(10px); /* Hiệu ứng kính */
+        border: 1px solid rgba(255,255,255,0.5);
+        border-radius: 20px;
+        overflow: hidden;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Hiệu ứng nảy */
+        text-align: center;
+        padding-bottom: 25px;
+        position: relative;
+    }
+
+    .member-card:hover {
+        transform: translateY(-10px) scale(1.02);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        background: #fff;
+    }
+
+    .card-top-bg {
+        height: 110px;
+        /* Gradient riêng cho từng card */
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .avatar-wrapper { margin-top: -60px; margin-bottom: 15px; position: relative; }
+    .avatar-img {
+        width: 110px; height: 110px;
+        border-radius: 50%;
+        border: 5px solid rgba(255,255,255,0.8);
+        object-fit: cover;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        background: #fff;
+        transition: transform 0.3s;
+    }
+    .member-card:hover .avatar-img { transform: rotate(5deg); border-color: #fff; }
+
+    .member-name { font-weight: 800; font-size: 1.2rem; color: #2c3e50; margin-bottom: 5px; }
+    .member-role { font-size: 0.95rem; color: #6c757d; margin-bottom: 15px; font-weight: 500; }
+
+    /* Contact Modal */
+    .contact-badge { position: absolute; top: 15px; right: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    
+    /* Footer trong suốt */
+    .footer { background: rgba(255,255,255,0.8) !important; backdrop-filter: blur(5px); }

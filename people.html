@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Thành viên Nghiên cứu - Smart Gate</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/@coreui/coreui@5.0.2/dist/css/coreui.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/@coreui/icons@3.0.1/css/all.min.css" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/people.css">
+</head>
+<body>
+
+  <div class="sidebar sidebar-dark sidebar-fixed" id="sidebar">
+    <div class="sidebar-brand d-none d-md-flex">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-info">
+        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+      </svg>
+      <span class="sidebar-brand-full fw-bold ms-2 text-uppercase">Smart Gate</span>
+    </div>
+    <ul class="sidebar-nav" data-coreui="navigation" data-simplebar>
+      <li class="nav-title">Trang chủ</li>
+      <li class="nav-item"><a class="nav-link" href="index.html"><i class="nav-icon cil-speedometer"></i> Dashboard</a></li>
+      <li class="nav-title">Chức năng</li>
+      <li class="nav-item"><a class="nav-link" href="camera.html"><i class="nav-icon cil-camera"></i> Giám sát Camera</a></li>
+      <li class="nav-item"><a class="nav-link" href="history.html"><i class="nav-icon cil-history"></i> Lịch sử hoạt động</a></li>
+      <li class="nav-item"><a class="nav-link" href="setting.html"><i class="nav-icon cil-settings"></i> Cài đặt</a></li>
+      <li class="nav-item"><a class="nav-link" href="map.html"><i class="nav-icon cil-map"></i> Bản đồ trạm</a></li>
+      <li class="nav-title">Nhóm Nghiên Cứu</li>
+      <li class="nav-item"><a class="nav-link" href="people.html"><i class="nav-icon cil-people"></i> Nhóm nghiên cứu</a></li>
+    </ul>
+    <button class="sidebar-toggler" type="button" onclick="coreui.Sidebar.getInstance(document.querySelector('#sidebar')).toggle()"></button>
+  </div>
+
+  <div class="wrapper">
+    <header class="header header-sticky p-2">
+      <div class="container-fluid">
+        <button class="btn btn-outline-light d-md-none me-3" type="button" onclick="coreui.Sidebar.getInstance(document.querySelector('#sidebar')).toggle()">
+            <i class="cil-menu"></i>
+        </button>
+        <span class="text-white fw-bold fs-5">THÀNH VIÊN NGHIÊN CỨU</span>
+        <div class="ms-auto d-none d-md-block">
+             <img src="img/logo/dhtl-1.png" height="40" alt="Logo" style="filter: brightness(0) invert(1); opacity: 0.9;">
+        </div>
+      </div>
+    </header>
+
+    <div class="body flex-grow-1 px-3 py-4">
+      <div class="container-lg">
+
+          <div class="section-title">Giảng viên hướng dẫn</div>
+          
+          <div class="row g-4 mb-5">
+              
+              <div class="col-md-6 col-lg-4">
+                  <div class="member-card">
+                      <div class="card-top-bg" style="background: linear-gradient(to right, #ff512f, #dd2476);"></div>
+                      <span class="badge bg-danger contact-badge">GVHD</span>
+                      <div class="avatar-wrapper">
+                          <img src="img/nhom-nghien-cuu/thay-vi.jpg" class="avatar-img" alt="Avatar">
+                      </div>
+                      <h5 class="member-name">TS. Ngô Quang Vĩ</h5>
+                      <div class="mb-3">
+                          <button class="btn btn-ghost-dark btn-sm rounded-circle"><i class="cil-envelope-closed"></i></button>
+                          <button class="btn btn-ghost-dark btn-sm rounded-circle"><i class="cil-phone"></i></button>
+                      </div>
+                  </div>
+              </div>
+
+              <div class="col-md-6 col-lg-4">
+                  <div class="member-card">
+                      <div class="card-top-bg" style="background: linear-gradient(to right, #ff512f, #dd2476);"></div>
+                      <span class="badge bg-danger contact-badge">GVHD</span>
+                      <div class="avatar-wrapper">
+                          <img src="img/nhom-nghien-cuu/co-oanh.jpg" class="avatar-img" alt="Avatar">
+                      </div>
+                      <h5 class="member-name">ThS. Nguyễn Thị Oanh</h5>
+                      <div class="mb-3">
+                          <button class="btn btn-ghost-dark btn-sm rounded-circle"><i class="cil-envelope-closed"></i></button>
+                          <button class="btn btn-ghost-dark btn-sm rounded-circle"><i class="cil-phone"></i></button>
+                      </div>
+                  </div>
+              </div>
+
+              
+          </div> </div>
+      </div>
+        <div class="section-title">Thành viên thực hiện</div>
+        <div class="row g-4">
+            
+            <div class="col-sm-6 col-lg-3">
+                <div class="member-card">
+                    <div class="card-top-bg" style="background: linear-gradient(to right, #00c6ff, #0072ff);"></div>
+                    <span class="badge bg-warning text-dark contact-badge">Trưởng nhóm</span>
+                    <div class="avatar-wrapper">
+                        <img src="img/nhom-nghien-cuu/truong-nhom.png" class="avatar-img" alt="Avatar">
+                    </div>
+                    <h5 class="member-name">Nguyễn Thị Diễm Quỳnh</h5>
+                    <button class="btn btn-sm btn-primary rounded-pill px-4 mb-2 shadow-sm" onclick="openContact('Nguyễn Thị Diễm Quỳnh')">Gửi tin nhắn</button>
+                </div>
+            </div>
+
+            <div class="col-sm-6 col-lg-3">
+                <div class="member-card">
+                    <div class="card-top-bg" style="background: linear-gradient(to right, #11998e, #38ef7d);"></div>
+                    <span class="badge bg-warning text-dark contact-badge">Thành viên</span>
+                    <div class="avatar-wrapper">
+                        <img src="img/nhom-nghien-cuu/phuong-linh.png" class="avatar-img" alt="Avatar">
+                    </div>
+                    <h5 class="member-name">Nguyễn Phương Linh</h5>
+                  
+                    <button class="btn btn-sm btn-outline-success rounded-pill px-4 mb-2" onclick="openContact('Nguyễn Phương Linh')">Gửi tin nhắn</button>
+                </div>
+            </div>
+
+            <div class="col-sm-6 col-lg-3">
+                <div class="member-card">
+                    <div class="card-top-bg" style="background: linear-gradient(to right, #8e2de2, #4a00e0);"></div>
+                    <span class="badge bg-warning text-dark contact-badge">Thành viên</span>
+                    <div class="avatar-wrapper">
+                        <img src="img/nhom-nghien-cuu/dang-khoa.png" class="avatar-img" alt="Avatar">
+                    </div>
+                    <h5 class="member-name">Nguyễn Đăng Khoa</h5>
+                    <button class="btn btn-sm btn-outline-info rounded-pill px-4 mb-2" onclick="openContact('Nguyễn Đăng Khoa')">Gửi tin nhắn</button>
+                </div>
+            </div>
+
+            <div class="col-sm-6 col-lg-3">
+                <div class="member-card">
+                    <div class="card-top-bg" style="background: linear-gradient(to right, #f12711, #f5af19);"></div>
+                    <span class="badge bg-warning text-dark contact-badge">Thành viên</span>
+                    <div class="avatar-wrapper">
+                        <img src="img/nhom-nghien-cuu/trhieule.jpg" class="avatar-img" alt="Avatar">
+                    </div>
+                    <h5 class="member-name">Lê Trung Hiếu</h5>
+                
+                    <button class="btn btn-sm btn-outline-warning rounded-pill px-4 mb-2" onclick="openContact('Lê Trung Hiếu')">Gửi tin nhắn</button>
+                </div>
+            </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </div>
+
+  <div class="modal fade" id="contactModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title"><i class="cil-send me-2"></i>Gửi tin nhắn</h5>
+          <button type="button" class="btn-close btn-close-white" data-coreui-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+          <p class="text-muted mb-3">Đang gửi tới: <strong id="modalMemberName" class="text-primary">...</strong></p>
+          <form>
+            <div class="form-floating mb-3">
+              <input type="text" class="form-control" id="floatTitle" placeholder="Tiêu đề">
+              <label for="floatTitle">Tiêu đề</label>
+            </div>
+            <div class="form-floating">
+              <textarea class="form-control" placeholder="Nội dung" id="floatContent" style="height: 100px"></textarea>
+              <label for="floatContent">Nội dung tin nhắn</label>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-ghost-secondary" data-coreui-dismiss="modal">Hủy</button>
+          <button type="button" class="btn btn-primary px-4" onclick="alert('Đã gửi tin nhắn thành công!')">
+              <i class="cil-paper-plane me-1"></i> Gửi đi
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@coreui/coreui@5.0.2/dist/js/coreui.bundle.min.js"></script>
+  
+  <script>
+      function openContact(name) {
+          document.getElementById('modalMemberName').innerText = name;
+          const modal = new coreui.Modal(document.getElementById('contactModal'));
+          modal.show();
+      }
+  </script>
+</body>
+</html>

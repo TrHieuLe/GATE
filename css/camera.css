@@ -1,0 +1,431 @@
+  :root {
+    --cui-sidebar-width: 240px;
+    --cui-header-height: 56px;
+  }
+
+  body, html {
+    height: 100%;
+    margin: 0;
+    background-color: #0a0a0a;
+    color: #fff;
+  }
+
+  /* Camera Grid Layout */
+  .camera-grid {
+    display: grid;
+    gap: 1rem;
+    padding: 1rem;
+  }
+
+  .camera-grid.view-single {
+    grid-template-columns: 1fr;
+  }
+
+  .camera-grid.view-dual {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .camera-grid.view-quad {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .camera-grid.view-grid {
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  }
+
+  @media (max-width: 768px) {
+    .camera-grid {
+      grid-template-columns: 1fr !important;
+    }
+  }
+
+  /* Camera Card */
+  .camera-card {
+    background: #1a1a1a;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    transition: transform 0.3s;
+    position: relative;
+  }
+
+  .camera-card:hover {
+    transform: scale(1.02);
+  }
+
+  .camera-card.fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 9999;
+    border-radius: 0;
+    transform: none;
+  }
+
+  .camera-header {
+    padding: 0.75rem 1rem;
+    background: linear-gradient(135deg, #2c3e50, #34495e);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #3498db;
+  }
+
+  .camera-title {
+    font-weight: bold;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .camera-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+  }
+
+  .status-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  .status-online {
+    background: #2ecc71;
+  }
+
+  .status-offline {
+    background: #e74c3c;
+  }
+
+  .status-warning {
+    background: #f39c12;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  /* Camera View */
+  .camera-view {
+    position: relative;
+    background: #000;
+    aspect-ratio: 16/9;
+    overflow: hidden;
+  }
+
+  .camera-stream {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .camera-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #7f8c8d;
+  }
+
+  .camera-placeholder i {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+  }
+
+  /* Camera Overlay Controls */
+  .camera-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.3);
+    opacity: 0;
+    transition: opacity 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .camera-card:hover .camera-overlay {
+    opacity: 1;
+  }
+
+  .overlay-controls {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .overlay-controls button {
+    background: rgba(0,0,0,0.8);
+    border: 2px solid #fff;
+    color: #fff;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .overlay-controls button:hover {
+    background: #3498db;
+    transform: scale(1.1);
+  }
+
+  .overlay-controls button i {
+    font-size: 1.5rem;
+  }
+
+  /* Camera Info */
+  .camera-info {
+    padding: 0.75rem 1rem;
+    background: #1a1a1a;
+    border-top: 1px solid #2c3e50;
+  }
+
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    font-size: 0.85rem;
+  }
+
+  .info-label {
+    color: #95a5a6;
+  }
+
+  .info-value {
+    color: #ecf0f1;
+    font-weight: 600;
+  }
+
+  /* Recording Indicator */
+  .recording-indicator {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(231, 76, 60, 0.9);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    display: none;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .recording-indicator.active {
+    display: flex;
+  }
+
+  .rec-dot {
+    width: 8px;
+    height: 8px;
+    background: white;
+    border-radius: 50%;
+    animation: blink 1s infinite;
+  }
+
+  @keyframes blink {
+    0%, 50%, 100% { opacity: 1; }
+    25%, 75% { opacity: 0; }
+  }
+
+  /* Motion Detection Overlay */
+  .motion-detected {
+    position: absolute;
+    top: 50px;
+    left: 10px;
+    background: rgba(241, 196, 15, 0.9);
+    color: #000;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-weight: bold;
+    display: none;
+  }
+
+  .motion-detected.active {
+    display: block;
+    animation: shake 0.5s;
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+  }
+
+  /* Control Panel */
+  .control-panel {
+    background: #1a1a1a;
+    padding: 1rem;
+    border-radius: 12px;
+    margin-bottom: 1rem;
+  }
+
+  .control-group {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .control-group label {
+    color: #95a5a6;
+    margin-right: 0.5rem;
+  }
+
+  /* Snapshots Gallery */
+  .snapshots-section {
+    background: #1a1a1a;
+    padding: 1rem;
+    border-radius: 12px;
+    margin-top: 1rem;
+  }
+
+  .snapshots-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+
+  .snapshot-item {
+    position: relative;
+    aspect-ratio: 16/9;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: border-color 0.3s;
+  }
+
+  .snapshot-item:hover {
+    border-color: #3498db;
+  }
+
+  .snapshot-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .snapshot-time {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0,0,0,0.8);
+    padding: 0.25rem;
+    font-size: 0.7rem;
+    text-align: center;
+  }
+
+  .snapshot-delete {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: rgba(231, 76, 60, 0.9);
+    border: none;
+    color: white;
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: none;
+  }
+
+  .snapshot-item:hover .snapshot-delete {
+    display: block;
+  }
+
+  /* Alert Panel */
+  .alert-panel {
+    background: #1a1a1a;
+    padding: 1rem;
+    border-radius: 12px;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+
+  .alert-item {
+    padding: 0.75rem;
+    background: #2c3e50;
+    border-left: 4px solid #e74c3c;
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+  }
+
+  .alert-item.warning {
+    border-left-color: #f39c12;
+  }
+
+  .alert-item.info {
+    border-left-color: #3498db;
+  }
+
+  /* Toast notifications */
+  .toast-container {
+    position: fixed;
+    top: 70px;
+    right: 20px;
+    z-index: 9999;
+  }
+
+  /* Dark theme for CoreUI components */
+  .header.header-dark {
+    background: linear-gradient(135deg, #1a1a1a, #2c3e50) !important;
+  }
+
+  .btn-dark {
+    background: #34495e;
+    border-color: #34495e;
+  }
+
+  .btn-dark:hover {
+    background: #2c3e50;
+  }
+  /* ===== layout fix: tránh sidebar đè nội dung ===== */
+.wrapper {
+  /* mặc định đặt lề trái = kích thước sidebar để nội dung không bị che */
+  margin-left: var(--cui-sidebar-width);
+  transition: margin-left 0.25s ease;
+}
+
+/* Header và footer full-width hợp lý (nếu cần) */
+.header, .footer {
+  left: var(--cui-sidebar-width);
+  transition: left 0.25s ease;
+  width: calc(100% - var(--cui-sidebar-width));
+}
+
+/* Khi màn nhỏ (mobile), sidebar bị ẩn -> xóa margin để xài toàn màn */
+@media (max-width: 992px) {
+  .wrapper {
+    margin-left: 0 !important;
+  }
+  .header, .footer {
+    left: 0 !important;
+    width: 100% !important;
+  }
+}
+
+/* Nếu bạn dùng class để thu nhỏ sidebar (coreui có thể thêm class .sidebar-minimized hoặc .sidebar-unfoldable),
+   CSS phụ trợ — nếu coreui thêm class thu gọn, bạn có thể điều chỉnh selector tương ứng. */
+body.sidebar-minimized .wrapper,
+.sidebar.minimized + .wrapper {
+  margin-left: 80px; /* ví dụ: khi thu nhỏ sidebar chỉ còn 80px */
+}

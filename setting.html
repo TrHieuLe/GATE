@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cài đặt Hệ thống - Smart Gate</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/@coreui/coreui@5.0.2/dist/css/coreui.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/@coreui/icons@3.0.1/css/all.min.css" rel="stylesheet">
+  
+  <style>
+    body { background-color: #f3f4f7; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+    
+    /* --- LAYOUT & SIDEBAR --- */
+    .wrapper { width: 100%; min-height: 100vh; display: flex; flex-direction: column; transition: padding-left 0.3s ease; }
+    @media (min-width: 768px) {
+        .wrapper { padding-left: 256px; }
+        .sidebar.hide ~ .wrapper { padding-left: 0; }
+    }
+
+    /* --- UI CUSTOM --- */
+    .card { border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border-radius: 8px; }
+    .header { background: #212529 !important; border-bottom: none; }
+    
+    /* Slider Custom */
+    .form-range::-webkit-slider-thumb { background: #321fdb; }
+    .form-range::-webkit-slider-runnable-track { background: #d8dbe0; }
+    
+    .setting-group-title {
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        color: #8a93a2;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        border-bottom: 1px solid #ebedef;
+        padding-bottom: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="sidebar sidebar-dark sidebar-fixed" id="sidebar">
+    <div class="sidebar-brand d-none d-md-flex">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-info">
+        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+      </svg>
+      <span class="sidebar-brand-full fw-bold ms-2 text-uppercase">Smart Gate</span>
+    </div>
+    <ul class="sidebar-nav" data-coreui="navigation" data-simplebar>
+      <li class="nav-title">Trang chủ</li>
+      <li class="nav-item"><a class="nav-link" href="index.html"><i class="nav-icon cil-speedometer"></i> Dashboard</a></li>
+      <li class="nav-title">Chức năng</li>
+      <li class="nav-item"><a class="nav-link" href="camera.html"><i class="nav-icon cil-camera"></i> Giám sát Camera</a></li>
+      <li class="nav-item"><a class="nav-link" href="history.html"><i class="nav-icon cil-history"></i> Lịch sử hoạt động</a></li>
+      <li class="nav-item"><a class="nav-link" href="setting.html"><i class="nav-icon cil-settings"></i> Cài đặt</a></li>
+      <li class="nav-item"><a class="nav-link" href="map.html"><i class="nav-icon cil-map"></i> Bản đồ trạm</a></li>
+      <li class="nav-title">Nhóm Nghiên Cứu</li>
+      <li class="nav-item"><a class="nav-link" href="people.html"><i class="nav-icon cil-people"></i> Nhóm nghiên cứu</a></li>
+    </ul>
+    <button class="sidebar-toggler" type="button" onclick="coreui.Sidebar.getInstance(document.querySelector('#sidebar')).toggle()"></button>
+  </div>
+
+  <div class="wrapper">
+    <header class="header header-sticky mb-4 p-2">
+      <div class="container-fluid">
+        <button class="btn btn-outline-light d-md-none me-3" type="button" onclick="coreui.Sidebar.getInstance(document.querySelector('#sidebar')).toggle()"><i class="cil-menu"></i></button>
+        <span class="text-white fw-bold fs-5">CẤU HÌNH HỆ THỐNG</span>
+        <div class="ms-auto">
+            <button class="btn btn-success btn-sm fw-bold" id="btnSaveTop" onclick="saveSettings()">
+                <i class="cil-save me-1"></i> Lưu Cấu Hình
+            </button>
+        </div>
+      </div>
+    </header>
+
+    <div class="body flex-grow-1 px-3">
+      <div class="container-lg">
+        
+        <div class="toast-container position-fixed bottom-0 end-0 p-3">
+            <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="toast-header bg-success text-white">
+                    <strong class="me-auto">Thành công</strong>
+                    <button type="button" class="btn-close btn-close-white" data-coreui-dismiss="toast" aria-label="Close"></button>
+                </div>
+                <div class="toast-body">Đã lưu cấu hình hệ thống thành công!</div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            
+            <div class="col-md-6">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-header bg-white fw-bold text-primary">
+                        <i class="cil-equalizer me-2"></i>Thông số Vận hành (Auto Mode)
+                    </div>
+                    <div class="card-body">
+                        
+                        <div class="mb-4">
+                            <label class="form-label d-flex justify-content-between fw-semibold">
+                                <span>Ngưỡng MỞ CỔNG (Nước cao):</span>
+                                <span class="badge bg-danger" id="lblHigh">85%</span>
+                            </label>
+                            <input type="range" class="form-range" id="setWaterHigh" min="50" max="100" value="85" 
+                                   oninput="updateLabel('lblHigh', this.value, '%')">
+                            <div class="form-text small">Khi mực nước vượt quá mức này, hệ thống sẽ tự động kích hoạt mở cổng xả.</div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label d-flex justify-content-between fw-semibold">
+                                <span>Ngưỡng ĐÓNG CỔNG (Nước thấp):</span>
+                                <span class="badge bg-success" id="lblLow">40%</span>
+                            </label>
+                            <input type="range" class="form-range" id="setWaterLow" min="0" max="49" value="40"
+                                   oninput="updateLabel('lblLow', this.value, '%')">
+                            <div class="form-text small">Khi mực nước xuống thấp hơn mức này, cổng sẽ tự động đóng để tích nước.</div>
+                        </div>
+
+                        <div class="mb-2">
+                            <label class="form-label fw-semibold">Thời gian trễ (Delay):</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="setDelay" value="10">
+                                <span class="input-group-text">giây</span>
+                            </div>
+                            <div class="form-text small">Khoảng thời gian chờ để xác nhận mực nước ổn định trước khi thao tác.</div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-header bg-white fw-bold text-info">
+                        <i class="cil-drop me-2"></i>Ngưỡng An toàn Chất lượng Nước
+                    </div>
+                    <div class="card-body">
+                        <div class="setting-group-title">Độ pH</div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-6">
+                                <label class="form-label small">Thấp nhất (Min):</label>
+                                <input type="number" class="form-control" id="setPhMin" value="6.5" step="0.1">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small">Cao nhất (Max):</label>
+                                <input type="number" class="form-control" id="setPhMax" value="8.5" step="0.1">
+                            </div>
+                        </div>
+
+                        <div class="setting-group-title mt-4">Độ đục & Oxy</div>
+                        <div class="mb-3">
+                            <label class="form-label small">Độ đục tối đa cho phép (NTU):</label>
+                            <input type="number" class="form-control" id="setTurbidityMax" value="50">
+                        </div>
+                         <div class="mb-3">
+                            <label class="form-label small">Oxy hòa tan tối thiểu (mg/L):</label>
+                            <input type="number" class="form-control" id="setDoMin" value="4.0" step="0.1">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white fw-bold text-warning text-dark">
+                        <i class="cil-bell me-2"></i>Kênh Cảnh báo & Thông báo
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-4">
+                            <div class="col-md-6 border-end-md">
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" id="enableTelegram" checked>
+                                    <label class="form-check-label fw-bold" for="enableTelegram">Gửi cảnh báo qua Telegram</label>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small">Bot Token:</label>
+                                    <input type="password" class="form-control form-control-sm" id="teleToken" placeholder="123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small">Chat ID:</label>
+                                    <input type="text" class="form-control form-control-sm" id="teleChatId" placeholder="-100123456789">
+                                </div>
+                                <button class="btn btn-outline-info btn-sm"><i class="cil-send"></i> Gửi tin test</button>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" id="enableEmail">
+                                    <label class="form-check-label fw-bold" for="enableEmail">Gửi báo cáo qua Email</label>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small">Email nhận:</label>
+                                    <input type="email" class="form-control form-control-sm" id="emailRecv" placeholder="admin@dhtl.edu.vn">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small">Tần suất báo cáo:</label>
+                                    <select class="form-select form-select-sm" id="emailFreq">
+                                        <option value="daily">Hàng ngày (8:00 AM)</option>
+                                        <option value="weekly">Hàng tuần</option>
+                                        <option value="monthly">Hàng tháng</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 mb-5">
+                <div class="card shadow-sm border-danger" style="border-width: 1px;">
+                    <div class="card-body d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+                        <div>
+                            <h6 class="fw-bold text-danger mb-1">Vùng Nguy Hiểm (System Zone)</h6>
+                            <small class="text-muted">Các thao tác này ảnh hưởng trực tiếp đến dữ liệu và trạng thái hệ thống.</small>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-outline-secondary btn-sm" onclick="resetToDefault()">Khôi phục mặc định</button>
+                            <button class="btn btn-danger text-white btn-sm" onclick="clearAllData()">Xóa toàn bộ dữ liệu</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+      </div>
+    </div>
+
+    <footer class="footer mt-auto px-4 py-2 bg-white border-top text-center small text-muted">
+        <div>© 2025 Smart Gate System.</div>
+    </footer>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@coreui/coreui@5.0.2/dist/js/coreui.bundle.min.js"></script>
+
+  <script>
+    const SETTINGS_KEY = 'smartGateSettings';
+    
+    // Cấu hình mặc định
+    const defaultSettings = {
+        waterHigh: 85,
+        waterLow: 40,
+        delay: 10,
+        phMin: 6.5,
+        phMax: 8.5,
+        turbidityMax: 50,
+        doMin: 4.0,
+        enableTelegram: true,
+        teleToken: '',
+        teleChatId: '',
+        enableEmail: false,
+        emailRecv: '',
+        emailFreq: 'daily'
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loadSettings();
+    });
+
+    // 1. Load Settings
+    function loadSettings() {
+        const stored = localStorage.getItem(SETTINGS_KEY);
+        const settings = stored ? JSON.parse(stored) : defaultSettings;
+
+        // Điền dữ liệu vào form
+        document.getElementById('setWaterHigh').value = settings.waterHigh;
+        updateLabel('lblHigh', settings.waterHigh, '%');
+
+        document.getElementById('setWaterLow').value = settings.waterLow;
+        updateLabel('lblLow', settings.waterLow, '%');
+
+        document.getElementById('setDelay').value = settings.delay;
+        document.getElementById('setPhMin').value = settings.phMin;
+        document.getElementById('setPhMax').value = settings.phMax;
+        document.getElementById('setTurbidityMax').value = settings.turbidityMax;
+        document.getElementById('setDoMin').value = settings.doMin;
+        
+        document.getElementById('enableTelegram').checked = settings.enableTelegram;
+        document.getElementById('teleToken').value = settings.teleToken;
+        document.getElementById('teleChatId').value = settings.teleChatId;
+
+        document.getElementById('enableEmail').checked = settings.enableEmail;
+        document.getElementById('emailRecv').value = settings.emailRecv;
+        document.getElementById('emailFreq').value = settings.emailFreq;
+    }
+
+    // 2. Save Settings
+    function saveSettings() {
+        const settings = {
+            waterHigh: document.getElementById('setWaterHigh').value,
+            waterLow: document.getElementById('setWaterLow').value,
+            delay: document.getElementById('setDelay').value,
+            phMin: document.getElementById('setPhMin').value,
+            phMax: document.getElementById('setPhMax').value,
+            turbidityMax: document.getElementById('setTurbidityMax').value,
+            doMin: document.getElementById('setDoMin').value,
+            enableTelegram: document.getElementById('enableTelegram').checked,
+            teleToken: document.getElementById('teleToken').value,
+            teleChatId: document.getElementById('teleChatId').value,
+            enableEmail: document.getElementById('enableEmail').checked,
+            emailRecv: document.getElementById('emailRecv').value,
+            emailFreq: document.getElementById('emailFreq').value
+        };
+
+        // Logic kiểm tra
+        if (parseInt(settings.waterLow) >= parseInt(settings.waterHigh)) {
+            alert("Lỗi: Ngưỡng Đóng (Thấp) phải nhỏ hơn Ngưỡng Mở (Cao)!");
+            return;
+        }
+
+        localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+        
+        // Hiện thông báo thành công
+        const toastEl = document.getElementById('liveToast');
+        const toast = new coreui.Toast(toastEl);
+        toast.show();
+    }
+
+    // 3. Tiện ích
+    function updateLabel(id, value, unit) {
+        document.getElementById(id).innerText = value + unit;
+    }
+
+    function resetToDefault() {
+        if(confirm("Bạn có chắc muốn khôi phục cài đặt gốc? Mọi thay đổi sẽ bị mất.")) {
+            localStorage.setItem(SETTINGS_KEY, JSON.stringify(defaultSettings));
+            loadSettings();
+            alert("Đã khôi phục mặc định.");
+        }
+    }
+    
+    function clearAllData() {
+        if(confirm("CẢNH BÁO: Hành động này sẽ xóa SẠCH lịch sử, biểu đồ và cài đặt!\nBạn có chắc chắn không?")) {
+            localStorage.clear();
+            location.reload();
+        }
+    }
+  </script>
+</body>
+</html>

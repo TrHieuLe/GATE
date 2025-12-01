@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Lịch sử Hoạt động - Smart Gate</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/@coreui/coreui@5.0.2/dist/css/coreui.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/@coreui/icons@3.0.1/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/history.css">
+</head>
+<body>
+
+  <div class="sidebar sidebar-dark sidebar-fixed" id="sidebar">
+    <div class="sidebar-brand d-none d-md-flex">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-info">
+        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+      </svg>
+      <span class="sidebar-brand-full fw-bold ms-2 text-uppercase">Smart Gate</span>
+    </div>
+    <ul class="sidebar-nav" data-coreui="navigation" data-simplebar>
+      <li class="nav-title">Trang chủ</li>
+      <li class="nav-item"><a class="nav-link" href="index.html"><i class="nav-icon cil-speedometer"></i> Dashboard</a></li>
+      <li class="nav-title">Chức năng</li>
+      <li class="nav-item"><a class="nav-link" href="camera.html"><i class="nav-icon cil-camera"></i> Giám sát Camera</a></li>
+      <li class="nav-item"><a class="nav-link" href="history.html"><i class="nav-icon cil-history"></i> Lịch sử hoạt động</a></li>
+      <li class="nav-item"><a class="nav-link" href="setting.html"><i class="nav-icon cil-settings"></i> Cài đặt</a></li>
+      <li class="nav-item"><a class="nav-link" href="map.html"><i class="nav-icon cil-map"></i> Bản đồ trạm</a></li>
+      <li class="nav-title">Nhóm Nghiên Cứu</li>
+      <li class="nav-item"><a class="nav-link" href="people.html"><i class="nav-icon cil-people"></i> Nhóm nghiên cứu</a></li>
+    </ul>
+    <button class="sidebar-toggler" type="button" onclick="coreui.Sidebar.getInstance(document.querySelector('#sidebar')).toggle()"></button>
+  </div>
+
+  <div class="wrapper">
+    <header class="header header-sticky mb-4 p-2">
+      <div class="container-fluid">
+        <button class="btn btn-outline-light d-md-none me-3" type="button" onclick="coreui.Sidebar.getInstance(document.querySelector('#sidebar')).toggle()"><i class="cil-menu"></i></button>
+        <span class="text-white fw-bold fs-5">NHẬT KÝ HOẠT ĐỘNG</span>
+        <div class="ms-auto text-white-50 small d-none d-sm-block">
+             Trạng thái: <span class="text-success fw-bold">Đồng bộ Realtime</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="body flex-grow-1 px-3">
+      <div class="container-lg">
+        
+        <div class="card mb-4">
+            <div class="card-header bg-white py-3 d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+                <h5 class="card-title mb-0 text-primary fw-bold"><i class="cil-list me-2"></i>Bảng Dữ Liệu Chi Tiết</h5>
+                
+                <div class="d-flex gap-2 w-100 w-md-auto">
+                    <div class="input-group">
+                        <span class="input-group-text bg-light"><i class="cil-search"></i></span>
+                        <input type="text" class="form-control" id="searchInput" placeholder="Tìm kiếm (lỗi, mở, đóng...)...">
+                    </div>
+                    
+                    <button class="btn btn-success text-white text-nowrap" onclick="downloadCSV()">
+                        <i class="cil-cloud-download"></i> <span class="d-none d-sm-inline">Xuất CSV</span>
+                    </button>
+                    <button class="btn btn-outline-danger text-nowrap" onclick="clearAllHistory()">
+                        <i class="cil-trash"></i> <span class="d-none d-sm-inline">Xóa Hết</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-3">Thời gian</th>
+                                <th>Loại sự kiện</th>
+                                <th>Hành động</th>
+                                <th class="text-center">Mực nước</th>
+                                <th class="text-center">Trạng thái Cổng</th>
+                                <th class="text-center">Cảnh báo</th>
+                                <th class="text-center">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody">
+                            </tbody>
+                    </table>
+                </div>
+                <div id="emptyState" class="text-center py-5 d-none">
+                    <i class="cil-folder-open fs-1 text-muted opacity-25"></i>
+                    <p class="text-muted mt-2">Chưa có dữ liệu lịch sử nào.</p>
+                </div>
+            </div>
+            <div class="card-footer bg-white border-top-0 py-3">
+                <small class="text-muted">Hiển thị tối đa 100 dòng nhật ký gần nhất.</small>
+            </div>
+        </div>
+
+      </div>
+    </div>
+
+    <footer class="footer mt-auto px-4 py-2 bg-white border-top text-center">
+        <div>© 2025 Smart Gate System.</div>
+    </footer>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@coreui/coreui@5.0.2/dist/js/coreui.bundle.min.js"></script>
+
+  <script src="js/history.js"></script>
+
+</body>
+</html>
