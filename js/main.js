@@ -1,5 +1,7 @@
 /**
  * CẤU HÌNH API KEY THỜI TIẾT
+ * Đăng ký miễn phí tại: https://openweathermap.org/api
+ * Copy Key của bạn và dán vào giữa hai dấu nháy bên dưới.
  */
 const OPENWEATHER_API_KEY = "2dd8c8cdc0dcdd5b571aebf98db5bf52"; 
 
@@ -9,29 +11,16 @@ let isAutoMode = true;
 let mainChartInstance = null;
 let socket = null;
 
-// --- BIẾN MỚI CHO LOGIC AI HỎI KỸ SƯ ---
-let aiModalInstance = null; 
-let pendingAction = null;   
-let isProcessingAI = false; 
-
 document.addEventListener('DOMContentLoaded', () => {
     initChart();
+    // Gọi thời tiết lần đầu, mặc định là Hanoi
     updateWeather('Hanoi');
     loadQuickLog();
     
-    // Khởi tạo Modal
-    const modalEl = document.getElementById('aiConfirmModal');
-    if (modalEl) {
-        aiModalInstance = new coreui.Modal(modalEl);
-    }
-
-    const btnConfirm = document.getElementById('btnConfirmAI');
-    const btnReject = document.getElementById('btnRejectAI');
-    if(btnConfirm) btnConfirm.addEventListener('click', confirmAIAction);
-    if(btnReject) btnReject.addEventListener('click', rejectAIAction);
-
+    // Giữ nguyên giả lập cảm biến nước và chất lượng nước (vì chưa có phần cứng thật)
     setInterval(simulationLoop, 2000);
     
+    // Cập nhật đồng hồ
     setInterval(() => {
         const timeStr = new Date().toLocaleTimeString('vi-VN');
         document.querySelectorAll('.cam-time').forEach(el => el.innerText = timeStr);
@@ -40,102 +29,38 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function simulationLoop() {
     const now = new Date().toLocaleTimeString('vi-VN');
+    // Giả lập mức nước dao động
     const waterLevel = Math.floor(Math.random() * (95 - 40) + 40);
     document.getElementById('valWater').innerText = waterLevel + "%";
     updateChart(now, waterLevel);
 
-    // Tạo giá trị pH và hiển thị
-    const phValue = (Math.random() * (8.5 - 6.5) + 6.5).toFixed(1);
-    document.getElementById('valPH').innerText = phValue;
-    
-    // Các chỉ số khác
+    // Random thông số chất lượng nước (Giả lập cảm biến môi trường)
+    document.getElementById('valPH').innerText = (Math.random() * (8.0 - 7.0) + 7.0).toFixed(1);
     document.getElementById('valTurbidity').innerText = Math.floor(Math.random() * (30 - 10) + 10);
-    document.getElementById('valTemp').innerText = (Math.random() * (30 - 25) + 25).toFixed(1); 
+    document.getElementById('valTemp').innerText = (Math.random() * (30 - 25) + 25).toFixed(1); // Nhiệt độ nước (khác nhiệt độ không khí)
     document.getElementById('valDO').innerText = (Math.random() * (7.5 - 5.5) + 5.5).toFixed(1);
 
-    // --- LOGIC AI MỚI ---
+    // Logic Tự động đóng mở cống
     if (isAutoMode) {
         const gateLabel = document.getElementById('valGate');
-        const currentStatus = gateLabel.innerText; 
-
-        if (isProcessingAI) return;
-
-        // Logic MỞ (Xả lũ)
         if (waterLevel > 85) {
-            if (!currentStatus.includes("MỞ")) {
-                // Truyền null cho phValue vì xả lũ không cần bằng chứng mặn
-                triggerAIProposal("OPEN", waterLevel, "MỞ CỔNG XẢ LŨ", null);
+            if(gateLabel.innerText !== "MỞ (Auto)") {
+                 gateLabel.innerText = "MỞ (Auto)";
+                 gateLabel.className = "fs-4 fw-bold text-danger";
+                 saveToHistory("System", "Tự động MỞ (Nước > 85%)", "Nguy hiểm");
             }
-        } 
-        // Logic ĐÓNG (Ngăn mặn)
-        else if (waterLevel < 50) {
-            if (!currentStatus.includes("ĐÓNG")) {
-                // Truyền giá trị pH vào để làm bằng chứng
-                triggerAIProposal("CLOSE", waterLevel, "ĐÓNG CỔNG NGĂN MẶN", phValue);
+        } else if (waterLevel < 50) {
+            if(gateLabel.innerText !== "ĐÓNG (Auto)") {
+                gateLabel.innerText = "ĐÓNG (Auto)";
+                gateLabel.className = "fs-4 fw-bold text-success";
+                // Giảm tỉ lệ spam log khi ổn định
+                if(Math.random() > 0.8) saveToHistory("System", "Tự động ĐÓNG (Ổn định)", "Không");
             }
         }
     }
 }
 
-// --- HÀM XỬ LÝ AI ĐỀ XUẤT (CẬP NHẬT THÊM PH) ---
-function triggerAIProposal(action, waterLevel, actionText, phValue) {
-    if (!aiModalInstance) return;
-
-    isProcessingAI = true;
-    pendingAction = action;
-
-    document.getElementById('modalWaterLevel').innerText = waterLevel + "%";
-    document.getElementById('modalActionDesc').innerText = `Hành động đề xuất: ${actionText}`;
-    
-    const descEl = document.getElementById('modalActionDesc');
-    const evidenceEl = document.getElementById('modalEvidence');
-    const phEl = document.getElementById('modalPHValue');
-
-    if(action === 'OPEN') {
-        // Xả lũ: Chữ đỏ, ẨN bằng chứng pH
-        descEl.className = "fs-5 fw-bold text-danger";
-        evidenceEl.classList.add('d-none');
-        evidenceEl.classList.remove('d-flex');
-    } 
-    else {
-        // Ngăn mặn: Chữ xanh, HIỆN bằng chứng pH
-        descEl.className = "fs-5 fw-bold text-success";
-        // Cập nhật giá trị pH vào modal
-        phEl.innerText = phValue || "--";
-        // Hiện box
-        evidenceEl.classList.remove('d-none');
-        evidenceEl.classList.add('d-flex');
-    }
-
-    aiModalInstance.show();
-}
-
-function confirmAIAction() {
-    const gateLabel = document.getElementById('valGate');
-    
-    if (pendingAction === 'OPEN') {
-        gateLabel.innerText = "MỞ (AI)";
-        gateLabel.className = "fs-4 fw-bold text-danger";
-        saveToHistory("AI System", "Kỹ sư DUYỆT mở cổng", "Nguy hiểm");
-    } else if (pendingAction === 'CLOSE') {
-        gateLabel.innerText = "ĐÓNG (AI)";
-        gateLabel.className = "fs-4 fw-bold text-success";
-        saveToHistory("AI System", "Kỹ sư DUYỆT đóng cổng", "Không");
-    }
-
-    isProcessingAI = false; 
-    pendingAction = null;
-    aiModalInstance.hide();
-}
-
-function rejectAIAction() {
-    saveToHistory("AI System", "Kỹ sư TỪ CHỐI đề xuất", "Cảnh báo");
-    isProcessingAI = false; 
-    pendingAction = null;
-    aiModalInstance.hide();
-}
-
-// --- CÁC HÀM CŨ GIỮ NGUYÊN ---
+// --- QUẢN LÝ LỊCH SỬ ---
 function saveToHistory(type, action, alertLevel) {
     const newItem = {
         id: Date.now(), 
@@ -175,6 +100,7 @@ function loadQuickLog() {
     });
 }
 
+// --- BIỂU ĐỒ (CHART.JS) ---
 function initChart() {
     const ctx = document.getElementById('mainChart').getContext('2d');
     const gradient = ctx.createLinearGradient(0, 0, 0, 400);
@@ -242,6 +168,7 @@ function resetChartData() {
     } 
 }
 
+// --- ĐIỀU KHIỂN NÚT BẤM ---
 function toggleMode() { 
     isAutoMode = !isAutoMode; 
     const btnText = document.getElementById('modeBtnText'); 
@@ -280,15 +207,18 @@ document.getElementById('btnCloseGate').addEventListener('click', () => {
     saveToHistory("Control", "Người dùng ĐÓNG cổng", "Không"); 
 });
 
+// Sự kiện nút tìm kiếm thời tiết
 document.getElementById('wBtn').addEventListener('click', () => {
     const cityInput = document.getElementById('wInput').value;
     updateWeather(cityInput);
 });
 
+// --- HÀM THỜI TIẾT (ĐÃ UPDATE API THẬT) ---
 async function updateWeather(cityInput) {
     const city = cityInput || "Hanoi";
     const card = document.getElementById('weatherCard');
     
+    // Kiểm tra API Key
     if (OPENWEATHER_API_KEY === "HAY_DIEN_API_KEY_CUA_BAN_VAO_DAY" || OPENWEATHER_API_KEY === "") {
         document.getElementById('wDesc').innerText = "Thiếu API Key";
         alert("Vui lòng mở file main.js và điền API Key của bạn vào dòng đầu tiên!");
@@ -298,6 +228,7 @@ async function updateWeather(cityInput) {
     if(card) card.classList.add('loading-blur');
 
     try {
+        // 1. Lấy thời tiết hiện tại
         const urlCurrent = `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&lang=vi&appid=${OPENWEATHER_API_KEY}`;
         const resCurrent = await fetch(urlCurrent);
         const dataCurrent = await resCurrent.json();
@@ -306,11 +237,14 @@ async function updateWeather(cityInput) {
             throw new Error(dataCurrent.message || "Không tìm thấy thành phố");
         }
 
+        // Cập nhật UI phần Hiện tại
         document.getElementById('wTemp').innerText = Math.round(dataCurrent.main.temp) + "°C";
         document.getElementById('wLoc').innerText = dataCurrent.name;
+        // Viết hoa chữ cái đầu mô tả
         const desc = dataCurrent.weather[0].description;
         document.getElementById('wDesc').innerText = desc.charAt(0).toUpperCase() + desc.slice(1);
         
+        // 2. Lấy dự báo 5 ngày (Forecast)
         const urlForecast = `https://api.openweathermap.org/data/2.5/forecast?q=${city}&units=metric&lang=vi&appid=${OPENWEATHER_API_KEY}`;
         const resForecast = await fetch(urlForecast);
         const dataForecast = await resForecast.json();
@@ -318,27 +252,34 @@ async function updateWeather(cityInput) {
         const forecastDiv = document.getElementById('wForecast');
         forecastDiv.innerHTML = '';
         
+        // API trả về 3 tiếng/lần (40 mốc). Lọc lấy các mốc gần 12h trưa mỗi ngày
         const dailyData = [];
         const usedDates = new Set();
         
         for(let item of dataForecast.list) {
-            const dateText = item.dt_txt.split(' ')[0]; 
+            const dateText = item.dt_txt.split(' ')[0]; // Lấy ngày YYYY-MM-DD
             if(!usedDates.has(dateText)) {
+                // Ưu tiên lấy mốc giờ trưa (ví dụ chuỗi chứa 12:00:00)
                 if(item.dt_txt.includes("12:00:00")) {
                     dailyData.push(item);
                     usedDates.add(dateText);
                 }
             }
         }
+        // Nếu không đủ 5 ngày do lọc khắt khe, ta lấy 5 ngày đầu tiên khác nhau
+        if(dailyData.length < 5) {
+             // Logic fallback đơn giản hơn nếu cần, nhưng thường 12:00 là ok
+        }
 
         const days = ['CN','T2','T3','T4','T5','T6','T7'];
 
+        // Render tối đa 5 ngày
         dailyData.slice(0, 5).forEach(item => {
             let d = new Date(item.dt * 1000);
             let dayName = days[d.getDay()];
             let t = Math.round(item.main.temp);
             let hum = item.main.humidity;
-            let cond = item.weather[0].description; 
+            let cond = item.weather[0].description; // Mô tả ngắn
             let icon = item.weather[0].icon;
 
             let div = document.createElement('div');
@@ -362,6 +303,7 @@ async function updateWeather(cityInput) {
     }
 }
 
+// --- WEBSOCKET (GIỮ NGUYÊN) ---
 document.getElementById('btnWsConnect').addEventListener('click', () => {
     const btn = document.getElementById('btnWsConnect'); 
     const status = document.getElementById('wsBadge');
